@@ -230,9 +230,9 @@ test("parseArgs uses the documented defaults", () => {
 });
 
 test("parseArgs reads every option", () => {
-  assert.deepEqual(parseArgs(["--scenario", "smoke", "--interval", "500", "--output", "tmp/x.csv"]), {
+  assert.deepEqual(parseArgs(["--scenario", "smoke", "--interval", "1500", "--output", "tmp/x.csv"]), {
     scenario: "smoke",
-    intervalMs: 500,
+    intervalMs: 1500,
     output: path.resolve("tmp/x.csv"),
   });
 });
@@ -241,10 +241,11 @@ test("parseArgs rejects unknown scenarios", () => {
   assert.throws(() => parseArgs(["--scenario", "banana"]), /Cenário desconhecido: banana/);
 });
 
-test("parseArgs rejects intervals below 100 ms or not integers", () => {
-  for (const value of ["50", "abc", "100.5"]) {
-    assert.throws(() => parseArgs(["--interval", value]), /--interval/);
+test("parseArgs rejects intervals below 1000 ms or not integers (D18: at most 1 line per second)", () => {
+  for (const value of ["50", "200", "999", "abc", "1000.5"]) {
+    assert.throws(() => parseArgs(["--interval", value]), /--interval precisa ser um inteiro entre 1000 e 60000/);
   }
+  assert.equal(parseArgs(["--interval", "1000"]).intervalMs, 1000);
 });
 
 test("parseArgs rejects unknown options and missing values", () => {

@@ -1,6 +1,6 @@
 # Contrato do `daily-report.csv`
 
-O `daily-report.csv` é o **único ponto de integração** entre quem produz os dados (a placa ou o mock) e quem consome (o web). Qualquer mudança neste formato precisa ser feita **nos três lados ao mesmo tempo**: o filtro do hardware, o mock e `web/src/lib/report/`.
+O `daily-report.csv` é o **único ponto de integração** entre quem produz os dados (a placa ou o mock) e quem consome (o web). Qualquer mudança neste formato precisa ser feita **nos três lados ao mesmo tempo**: o filtro do hardware, o mock e `web/src/services/report/`.
 
 ## Local
 
@@ -28,7 +28,7 @@ hora,origem,nivel,cenario,mq6,mq6_base,mq6_nivel,mq2,mq2_base,mq2_nivel,chama,te
 
 - Codificação **UTF-8 sem BOM**, quebra de linha **`\n`** (LF), sem aspas e sem espaços.
 - Cada linha de dados termina com `\n` e é gravada com **uma única** operação de append. Assim, quem lê nunca encontra meia linha seguida de outra.
-- Cadência: **1 linha por segundo**.
+- Cadência: **1 linha por segundo, no máximo** ([D18](decisions.md#d18-no-máximo-1-linha-por-segundo-no-csv)). Assim a `hora` identifica cada linha do dia.
 - **Um produtor por vez:** não rode o mock com a placa gravando ao mesmo tempo.
 
 ### Troca diária (rotação)
@@ -72,9 +72,9 @@ Com isso, a virada da meia-noite, um arquivo apagado no meio da execução ou um
 
 O separador decimal é **ponto** (`26.4`), nunca vírgula.
 
-## Mapeamento para o domínio do web (inglês)
+## Mapeamento para os tipos do web (inglês)
 
-Só `web/src/lib/report/` conhece os nomes da esquerda. O resto do web usa os tipos de `web/src/domain/`.
+Só `web/src/services/report/` conhece os nomes da esquerda. O resto do web usa os tipos de `web/src/types/`.
 
 | CSV | Domínio (`Reading`) |
 |---|---|

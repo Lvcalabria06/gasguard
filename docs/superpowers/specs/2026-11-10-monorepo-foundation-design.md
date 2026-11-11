@@ -19,7 +19,7 @@ Transformar o repositório (hoje só um projeto PlatformIO na raiz) num monorepo
    - Next.js 16.4.x (App Router, `src/`, TypeScript, Tailwind, ESLint, npm), shadcn/ui iniciado, Recharts instalado e Vitest configurado;
    - escutando em `0.0.0.0` e com `allowedDevOrigins` para IPs de rede local;
    - `.env.example` com `DAILY_REPORT_PATH=../daily-report.csv`;
-   - tipos de domínio em `src/domain/` e um `README.md` por camada;
+   - tipos de domínio em `src/domain/` e um `README.md` por camada (reorganizado depois em `types/` + `lib/` por D15/D16);
    - página placeholder em pt-BR.
 
 ### Não entra (ver roadmap)
@@ -41,7 +41,7 @@ node mock-daily-report.js [--scenario <nome>] [--interval <ms>] [--output <camin
 | Opção | Padrão | Validação |
 |---|---|---|
 | `--scenario` | `tour` | um dos nomes da tabela abaixo |
-| `--interval` | `1000` | inteiro de 100 a 60000 (acima de 2^31-1 o `setInterval` vira 1 ms) |
+| `--interval` | `1000` | inteiro de 1000 a 60000 (mínimo alterado de 100 para 1000 por D18; acima de 2^31-1 o `setInterval` vira 1 ms) |
 | `--output` | `<pasta do script>/daily-report.csv` | qualquer caminho; relativo é resolvido a partir do diretório atual |
 
 - Opção desconhecida, valor faltando ou valor inválido: mensagem em pt-BR no stderr, seguida do uso, e **exit code 1**.
@@ -82,13 +82,13 @@ A temperatura é formatada com 1 casa decimal (`toFixed(1)`). Os inteiros dos MQ
   - `"start": "next start -H 0.0.0.0"`
   - `"test": "vitest run"`
 - `next.config.ts`: `allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"]`, para o celular conseguir usar o `next dev` pela rede.
-- Domínio: os tipos seguem o mapeamento de [`csv-contract.md`](../../csv-contract.md#mapeamento-para-o-domínio-do-web-inglês).
+- Domínio: os tipos seguem o mapeamento de [`csv-contract.md`](../../csv-contract.md#mapeamento-para-os-tipos-do-web-inglês).
 
 ## Critérios de aceite
 
 - `git log --follow hardware/src/main.cpp` mostra os commits antigos, e `git diff main --stat -M` lista `src/main.cpp → hardware/src/main.cpp` sem mudança de conteúdo.
 - `node --test mock-daily-report.test.js` passa.
-- `node mock-daily-report.js --scenario gas_leak_flame --interval 200` cria `daily-report.csv` com a linha `data,<hoje>`, o cabeçalho de 17 colunas e linhas `CRITICO,1`.
+- `node mock-daily-report.js --scenario gas_leak_flame --interval 1000` cria `daily-report.csv` com a linha `data,<hoje>`, o cabeçalho de 17 colunas e linhas `CRITICO,1`.
 - Em `web/`: `npm test`, `npm run lint` e `npm run build` passam.
 - `npm run dev` serve a página placeholder em `http://localhost:3000`.
 - `daily-report.csv`, `node_modules/` e `.next/` não aparecem no `git status`.

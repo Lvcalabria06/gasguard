@@ -175,9 +175,10 @@ function parseArgs(argv) {
       }
       options.scenario = value;
     } else if (option === "--interval") {
+      // Lower bound: at most 1 line per second, so `hora` identifies each line (docs/decisions.md D18).
       // Upper bound: setInterval clamps delays above 2^31-1 ms to 1 ms, which would flood the CSV.
-      if (!/^\d+$/.test(value) || Number(value) < 100 || Number(value) > 60000) {
-        throw new Error("--interval precisa ser um inteiro entre 100 e 60000 (ms).");
+      if (!/^\d+$/.test(value) || Number(value) < 1000 || Number(value) > 60000) {
+        throw new Error("--interval precisa ser um inteiro entre 1000 e 60000 (ms).");
       }
       options.intervalMs = Number(value);
     } else {
@@ -190,7 +191,7 @@ function parseArgs(argv) {
 const USAGE = [
   "Uso: node mock-daily-report.js [--scenario <nome>] [--interval <ms>] [--output <caminho>]",
   `  --scenario  ${SCENARIO_NAMES.join(", ")} (padrão: tour)`,
-  "  --interval  milissegundos entre linhas, inteiro de 100 a 60000 (padrão: 1000)",
+  "  --interval  milissegundos entre linhas, inteiro de 1000 a 60000 (padrão: 1000)",
   "  --output    caminho do CSV (padrão: daily-report.csv na raiz do repositório)",
 ].join("\n");
 

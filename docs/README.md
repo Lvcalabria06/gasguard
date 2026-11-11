@@ -17,5 +17,5 @@ Contexto, decisões e planos do projeto. Comece por aqui.
 
 - Os documentos são escritos em **português**. O **código do web e do mock é em inglês**.
 - O **firmware** (`hardware/`) é escrito em português e continua assim.
-- O **CSV** usa os nomes em português do firmware. No web, **só** a camada `web/src/lib/report/` conhece esses nomes.
+- O **CSV** usa os nomes em português do firmware. No web, **só** `web/src/services/report/` conhece esses nomes.
 - Nenhum texto do sistema pode prometer proteção real: **protótipo acadêmico, não é um detector certificado**.

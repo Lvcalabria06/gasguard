@@ -32,10 +32,18 @@ docs/                  decisões, contrato, roadmap, specs e planos do Superpowe
   - documentação e textos da interface em **pt-BR**;
   - código do `web/` e do mock em **inglês**;
   - o firmware continua em **português**.
-- **CSV em português:** no web, **somente** `web/src/lib/report/` conhece as colunas em português (`nivel`, `fogao`...). O resto usa os tipos de `web/src/domain/`.
+- **CSV em português:** no web, **somente** `web/src/services/report/` conhece as colunas em português (`nivel`, `fogao`...). O resto usa os tipos de `web/src/types/`.
 - **O nível de risco vem do firmware.** O web não recalcula regras de risco.
 - **Sem dados há mais de 5 s:** mostre "sem dados", nunca "normal".
-- **Camadas do web:** `domain` (tipos e funções puras) → `lib/report` (CSV) → `app/api` (SSE/HTTP) → `hooks` → `components`. Regra de negócio nunca fica em componente.
+- **Camadas do web** (tabela completa em [`docs/architecture.md`](docs/architecture.md#camadas-do-web)). Não crie pastas de primeiro nível novas em `web/src`:
+  - `app/`: rotas finas. `page.tsx` (Server Component) faz a carga inicial; `api/stream` é o SSE. Não existe `/api/report`.
+  - `components/`: interface (`ui/` é do shadcn, `dashboard/` é a tela).
+  - `hooks/`: estado no navegador. Na reconexão do SSE, `router.refresh()`.
+  - `services/`: lógica do servidor; todo arquivo começa com `import "server-only";`.
+  - `lib/`: funções puras com `*.test.ts` ao lado. **Regra de negócio fica aqui**, nunca em componente ou hook.
+  - `types/`: **só tipos**, nada executável.
+  - Importe só "para baixo": `app` → `components` → `hooks` → `services` → `lib` → `types` (`components` e `hooks` nunca importam `services`).
+  - Arquivos em `kebab-case`, imports por `@/`.
 - **Firmware:**
   - não altere a lógica de risco nem os pinos sem pedido explícito;
   - não use a pasta `hardware/data/`, que o PlatformIO reserva para o sistema de arquivos da placa;

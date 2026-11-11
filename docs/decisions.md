@@ -31,7 +31,7 @@ A linha 1 tem a data, a linha 2 as colunas e o resto são os dados. Quem grava v
 ## D6. O CSV usa os nomes em português do firmware
 
 O firmware é todo em português (`ATENCAO`, `fogaoLigado`...). O CSV segue esse padrão para facilitar o lado do hardware.
-**Consequência:** no web, **só** `src/lib/report/` conhece esses nomes e converte tudo para o domínio em inglês.
+**Consequência:** no web, **só** `src/services/report/` conhece esses nomes e converte tudo para os tipos em inglês (pasta atualizada por D15).
 
 ## D7. O nível de risco é calculado pelo firmware
 
@@ -45,7 +45,7 @@ O CSV traz `nivel` e `cenario`, e o web só exibe. O web guarda um dicionário `
 
 ## D9. Tempo real por SSE, com tail do arquivo
 
-`/api/stream` envia só as linhas novas (leitura por offset), e `/api/report` faz a carga inicial. Sem linha nova há mais de 5 s, o app mostra **sem dados**.
+`/api/stream` envia só as linhas novas (leitura por offset), e `/api/report` faz a carga inicial (**substituído por D17:** a carga inicial passou para o Server Component e `/api/report` não existe mais). Sem linha nova há mais de 5 s, o app mostra **sem dados**.
 **Por quê:** o arquivo chega a cerca de 86 mil linhas por dia, então relê-lo a cada segundo seria desperdício. O `EventSource` reconecta sozinho.
 **Alternativa descartada:** polling a cada 1 s.
 
@@ -60,6 +60,7 @@ Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS, shadcn/ui, Recharts, 
 ## D12. O código do web e do mock é em inglês, com camadas separadas
 
 Identificadores em inglês (`useReadings`, `Reading`, `RiskLevel`). Os textos da tela ficam em pt-BR. As camadas são leitura (`lib/report`) → transporte (`app/api`) → cliente (`hooks`) → UI (`components`). Regras puras ficam em `src/domain/` com teste. O padrão container/presentation é convenção flexível.
+**Camadas e pastas substituídas por D15 e D16** (`domain/` foi removido).
 
 ## D13. Esta branch de refactor não altera o comportamento do firmware
 
@@ -69,3 +70,25 @@ Identificadores em inglês (`useReadings`, `Reading`, `RiskLevel`). Os textos da
 ## D14. E-mail de alerta é uma etapa futura
 
 O envio de e-mail **gratuito** (Gmail SMTP com senha de app, ou o plano grátis do Resend) para alertas críticos depende de uma tela de login/cadastro para saber o e-mail do usuário. O objetivo é demonstrar na apresentação: "aconteceu um caso crítico e o usuário recebeu um e-mail".
+
+## D15. O web é organizado por camada, em 6 pastas
+
+`web/src` tem `app/` (rotas), `components/` (interface), `hooks/` (estado no navegador), `services/` (lógica do servidor, com `import "server-only"`), `lib/` (funções puras com teste) e `types/` (só tipos). Cada pasta só importa as que estão abaixo dela na tabela de [architecture.md](architecture.md#camadas-do-web). O CSV em português fica em `services/report/`.
+**Por quê:** é uma tela só e o projeto é pequeno; por camada, uma IA acha cada coisa pelo tipo de arquivo, e é o padrão que o Next e o shadcn já criam. `services/` dá lugar à lógica do servidor (CSV agora; e-mail e login na Etapa 5) sem misturar com o navegador.
+**Alternativa descartada:** organizar por feature (`features/dashboard/...`), que só compensa com 3 ou mais áreas independentes.
+
+## D16. `types/` só tem tipos; o executável vai para `lib/`
+
+A pasta `domain/` foi removida. Os tipos (`Reading`, `RiskLevel`, `ReportEvent`) foram para `types/`; constantes e funções, como `RISK_LEVELS` e `isRiskLevel()`, foram para `lib/`.
+**Por quê:** "tipos compartilhados" é mais direto que "domínio", e função útil dentro de uma pasta de tipos fica difícil de achar.
+
+## D17. Carga inicial no Server Component, SSE só ao vivo
+
+O `app/page.tsx` chama `getRecentReadings()` (leituras dos últimos 10 min + todos os eventos do dia) e a tela já abre preenchida. O `/api/stream` envia só as linhas novas. Quando a conexão cai e volta, ou o arquivo é recriado, o `useReadings()` chama `router.refresh()`, que repete a carga sem recarregar a página. Linhas com `hora` ≤ à da última recebida são descartadas. **Não existe `/api/report`.**
+**Por quê:** é o fluxo mais fácil de entender (primeiro carrega, depois acompanha) e de explicar na apresentação. No pior caso perde-se uma linha entre a carga e a abertura do SSE: um ponto no gráfico, ou um evento registrado 1 s depois. Recarregar a página sempre traz tudo, porque o CSV no disco está completo.
+**Alternativas descartadas:** (1) snapshot como primeira mensagem do SSE, que tem um caminho só mas a tela abre vazia; (2) `id` por linha + `Last-Event-ID`, sem nenhuma perda mas com mais peças para manter.
+
+## D18. No máximo 1 linha por segundo no CSV
+
+Quem grava (placa ou mock) escreve no máximo 1 linha por segundo. O `--interval` do mock passou a aceitar de **1000** a 60000 ms (antes, a partir de 100).
+**Por quê:** assim a `hora` (`HH:MM:SS`) identifica cada linha do dia, e o web descarta duplicatas só comparando o horário (D17).

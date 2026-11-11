@@ -19,7 +19,7 @@ export interface TemperatureReading {
   high: boolean;
 }
 
-/** One CSV row, already translated to the English domain (see docs/csv-contract.md). */
+/** One CSV row, already translated to the English types (see docs/csv-contract.md). */
 export interface Reading {
   /** Local ISO date-time without timezone, e.g. "2026-11-10T14:32:08". */
   timestamp: string;
