@@ -10,10 +10,10 @@ Cada etapa vira **um plano do Superpowers** em `docs/superpowers/plans/` e **uma
 
 Plano: [`2026-11-10-monorepo-foundation.md`](superpowers/plans/2026-11-10-monorepo-foundation.md)
 
-- [ ] Mover o projeto PlatformIO para `hardware/`, sem mudar o código.
-- [ ] Documentação (`docs/`), `AGENTS.md`, `CLAUDE.md`, README da raiz e workspace do VS Code.
-- [ ] `mock-daily-report.js` completo, com testes.
-- [ ] Esqueleto do `web/`: Next.js, Tailwind, shadcn/ui, Recharts, Vitest, tipos de domínio e pastas das camadas.
+- [x] Mover o projeto PlatformIO para `hardware/`, sem mudar o código.
+- [x] Documentação (`docs/`), `AGENTS.md`, `CLAUDE.md`, README da raiz e workspace do VS Code.
+- [x] `mock-daily-report.js` completo, com testes.
+- [x] Esqueleto do `web/`: Next.js, Tailwind, shadcn/ui, Recharts, Vitest, tipos de domínio e pastas das camadas.
 
 ## Etapa 2: Hardware grava o CSV (time de hardware)
 
