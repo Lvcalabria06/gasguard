@@ -193,7 +193,7 @@ Ao voltar ao normal, ele informa quanto tempo durou a situação. A cada 2 segun
 git clone https://github.com/Lvcalabria06/gasguard.git
 ```
 
-1. No VS Code, abra **a pasta que contém o `platformio.ini`**.
+1. No VS Code, abra o arquivo **`gasguard.code-workspace`** da raiz do repositório (ou abra só a pasta **`hardware/`**). O PlatformIO precisa enxergar o `platformio.ini`.
 2. Espere o PlatformIO terminar de configurar. Na primeira vez ele baixa a plataforma ESP32 e as bibliotecas (pode levar alguns minutos).
 3. Conecte a ESP32 pelo USB.
 4. Na barra azul inferior, clique em **→ (Upload)** e espere aparecer **SUCCESS**.
@@ -294,20 +294,22 @@ Os limites dos MQ são **experimentais**, calibrados na maquete. Eles não corre
 - [ ] Envio de telemetria por **Wi-Fi + MQTT**.
 - [ ] Firmware organizado em tarefas **FreeRTOS**.
 
-A especificação detalhada da etapa de dados, back-end e app está em [`docs/gasguard-fase-dados-backend-frontend.md`](docs/gasguard-fase-dados-backend-frontend.md).
+O formato do CSV e o que falta no firmware estão em [`docs/csv-contract.md`](../docs/csv-contract.md). As próximas etapas estão em [`docs/roadmap.md`](../docs/roadmap.md).
 
 ---
 
 ## Estrutura do repositório
 
 ```
-gasguard/
+hardware/
 ├── platformio.ini      # Configuração da placa e das bibliotecas
 ├── src/
 │   └── main.cpp        # Firmware do GasGuard
-├── docs/               # Especificações e documentação do projeto
-└── README.md
+├── include/ lib/ test/ # Pastas padrão do PlatformIO
+└── README.md           # Este arquivo
 ```
+
+O repositório completo (app web, simulador e documentação) está descrito no [README da raiz](../README.md).
 
 ---
 

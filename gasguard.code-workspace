@@ -1,0 +1,17 @@
+{
+  "folders": [
+    { "name": "hardware", "path": "hardware" },
+    { "name": "web", "path": "web" },
+    { "name": "gasguard (raiz)", "path": "." }
+  ],
+  "settings": {
+    "files.exclude": { "hardware": true, "web": true }
+  },
+  "extensions": {
+    "recommendations": [
+      "platformio.platformio-ide",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss"
+    ]
+  }
+}
