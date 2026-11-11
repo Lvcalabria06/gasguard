@@ -32,6 +32,7 @@ docs/                  decisões, contrato, roadmap, specs e planos do Superpowe
   - documentação e textos da interface em **pt-BR**;
   - código do `web/` e do mock em **inglês**;
   - o firmware continua em **português**.
+- **Hardware e web são desacoplados:** a única interseção é o `daily-report.csv` da raiz. O `web/` nunca importa, lê ou executa nada de `hardware/`, e vice-versa. O web tem que funcionar sem a placa (mock ou "sem dados"), e a placa sem o web.
 - **CSV em português:** no web, **somente** `web/src/services/report/` conhece as colunas em português (`nivel`, `fogao`...). O resto usa os tipos de `web/src/types/`.
 - **O nível de risco vem do firmware.** O web não recalcula regras de risco.
 - **Sem dados há mais de 5 s:** mostre "sem dados", nunca "normal".

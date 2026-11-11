@@ -92,3 +92,13 @@ O `app/page.tsx` chama `getRecentReadings()` (leituras dos últimos 10 min + tod
 
 Quem grava (placa ou mock) escreve no máximo 1 linha por segundo. O `--interval` do mock passou a aceitar de **1000** a 60000 ms (antes, a partir de 100).
 **Por quê:** assim a `hora` (`HH:MM:SS`) identifica cada linha do dia, e o web descarta duplicatas só comparando o horário (D17).
+
+## D19. Hardware e web são desacoplados; a única interseção é o `daily-report.csv` da raiz
+
+O `hardware/` e o `web/` são projetos independentes. Nenhum importa, lê ou executa nada do outro: o web só lê `./daily-report.csv` (caminho em `DAILY_REPORT_PATH`), e o lado do hardware só escreve nesse arquivo.
+**Consequências:**
+- O web funciona **sem a placa**: com o mock gravando o CSV, ou mostrando "sem dados" quando ninguém grava.
+- A placa funciona **sem o web**: Upload e Monitor Serial continuam iguais a antes desta reorganização. O que o hardware ganhar para gravar o CSV (Etapa 2) é um acréscimo e não pode mudar o comportamento atual do firmware.
+- Qualquer mudança no formato do CSV segue o [contrato](csv-contract.md) e é feita em todos os produtores ao mesmo tempo.
+
+**Por quê:** cada lado pode ser desenvolvido, testado e apresentado sozinho, e o dashboard pode trocar a fonte de dados (por exemplo, MQTT no futuro) sem tocar no firmware.

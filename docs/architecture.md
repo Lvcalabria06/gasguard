@@ -26,6 +26,7 @@
                          navegador: http://localhost:3000 · celular: http://<IP-do-PC>:3000
 ```
 
+- **Hardware e web são desacoplados** ([D19](decisions.md#d19-hardware-e-web-são-desacoplados-a-única-interseção-é-o-daily-reportcsv-da-raiz)). A única interseção é o `daily-report.csv` da raiz: nenhum dos dois importa, lê ou executa nada do outro. O web roda sem a placa, e a placa roda sem o web.
 - **O hardware e o mock são intercambiáveis.** Os dois escrevem o mesmo arquivo, no mesmo formato ([csv-contract.md](csv-contract.md)). O web não sabe quem está escrevendo, só lê a coluna `origem`.
 - **O nível de risco é do firmware.** O web exibe `nivel` e `cenario`, mas não recalcula regras.
 - **Tudo roda local.** O web lê um arquivo do disco, então não há deploy em nuvem. O celular acessa pela mesma rede Wi-Fi.
