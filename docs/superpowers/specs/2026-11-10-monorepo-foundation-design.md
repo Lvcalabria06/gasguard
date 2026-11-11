@@ -41,7 +41,7 @@ node mock-daily-report.js [--scenario <nome>] [--interval <ms>] [--output <camin
 | Opção | Padrão | Validação |
 |---|---|---|
 | `--scenario` | `tour` | um dos nomes da tabela abaixo |
-| `--interval` | `1000` | inteiro ≥ 100 |
+| `--interval` | `1000` | inteiro de 100 a 60000 (acima de 2^31-1 o `setInterval` vira 1 ms) |
 | `--output` | `<pasta do script>/daily-report.csv` | qualquer caminho; relativo é resolvido a partir do diretório atual |
 
 - Opção desconhecida, valor faltando ou valor inválido: mensagem em pt-BR no stderr, seguida do uso, e **exit code 1**.

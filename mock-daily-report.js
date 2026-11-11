@@ -168,15 +168,16 @@ function parseArgs(argv) {
     if (!["--scenario", "--interval", "--output"].includes(option)) {
       throw new Error(`Opção desconhecida: ${option}`);
     }
-    if (value === undefined) throw new Error(`Falta o valor de ${option}.`);
+    if (value === undefined || value.startsWith("--")) throw new Error(`Falta o valor de ${option}.`);
     if (option === "--scenario") {
       if (!SCENARIO_NAMES.includes(value)) {
         throw new Error(`Cenário desconhecido: ${value}. Use um de: ${SCENARIO_NAMES.join(", ")}`);
       }
       options.scenario = value;
     } else if (option === "--interval") {
-      if (!/^\d+$/.test(value) || Number(value) < 100) {
-        throw new Error("--interval precisa ser um inteiro >= 100 (ms).");
+      // Upper bound: setInterval clamps delays above 2^31-1 ms to 1 ms, which would flood the CSV.
+      if (!/^\d+$/.test(value) || Number(value) < 100 || Number(value) > 60000) {
+        throw new Error("--interval precisa ser um inteiro entre 100 e 60000 (ms).");
       }
       options.intervalMs = Number(value);
     } else {
@@ -189,7 +190,7 @@ function parseArgs(argv) {
 const USAGE = [
   "Uso: node mock-daily-report.js [--scenario <nome>] [--interval <ms>] [--output <caminho>]",
   `  --scenario  ${SCENARIO_NAMES.join(", ")} (padrão: tour)`,
-  "  --interval  milissegundos entre linhas, inteiro >= 100 (padrão: 1000)",
+  "  --interval  milissegundos entre linhas, inteiro de 100 a 60000 (padrão: 1000)",
   "  --output    caminho do CSV (padrão: daily-report.csv na raiz do repositório)",
 ].join("\n");
 

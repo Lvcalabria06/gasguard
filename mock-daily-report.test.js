@@ -252,3 +252,15 @@ test("parseArgs rejects unknown options and missing values", () => {
   assert.throws(() => parseArgs(["--scenario"]), /--scenario/);
   assert.throws(() => parseArgs(["--interval"]), /--interval/);
 });
+
+test("parseArgs rejects intervals above 60000 ms (setInterval would overflow to 1 ms)", () => {
+  for (const value of ["60001", "3000000000"]) {
+    assert.throws(() => parseArgs(["--interval", value]), /--interval/);
+  }
+  assert.equal(parseArgs(["--interval", "60000"]).intervalMs, 60000);
+});
+
+test("parseArgs rejects an option used as another option's value", () => {
+  assert.throws(() => parseArgs(["--output", "--interval"]), /Falta o valor de --output/);
+  assert.throws(() => parseArgs(["--scenario", "--output"]), /Falta o valor de --scenario/);
+});

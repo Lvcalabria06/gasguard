@@ -27,7 +27,7 @@ mock-daily-report.js (simulador, para testes) ───────────�
 
 ## Como rodar
 
-Pré-requisitos: **Node ≥ 20.9** e VS Code com a extensão **PlatformIO IDE** (só para o firmware).
+Pré-requisitos: **Node ≥ 22.12** (recomendado: Node 24 LTS) e VS Code com a extensão **PlatformIO IDE** (só para o firmware).
 
 **Sem a placa (simulador):**
 

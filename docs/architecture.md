@@ -84,7 +84,7 @@ Visual clean e moderno, com modo claro e escuro do sistema. **Evento** = mudanç
 | Mock | Node puro (CommonJS, sem dependências), testado com `node --test` |
 | Firmware | C++/Arduino no PlatformIO (`esp32dev`) |
 | Filtro do monitor | Python, executado pelo próprio PlatformIO |
-| Node | ≥ 20.9 (exigência do Next 16) |
+| Node | ≥ 22.12, recomendado 24 LTS (exigência do Vitest 5 e do `cn` do shadcn; o mock sozinho roda em ≥ 20.9) |
 | Gerenciador | npm |
 
 ## Mapa de pastas
