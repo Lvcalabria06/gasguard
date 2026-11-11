@@ -150,3 +150,105 @@ test("tourStepAt maps elapsed time to the current step and loops", () => {
     assert.deepEqual(tourStepAt(elapsed), { scenario, elapsedInStep }, `elapsed ${elapsed}`);
   }
 });
+
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const { ensureDailyFile, writeReading, parseArgs } = require("./mock-daily-report");
+
+function tmpCsv() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gasguard-mock-"));
+  return path.join(dir, "daily-report.csv");
+}
+const preamble = (date) => `data,${date}\n${HEADER_LINE}\n`;
+
+test("ensureDailyFile creates the file with the date and header lines", () => {
+  const file = tmpCsv();
+  assert.equal(ensureDailyFile(file, "2026-11-10"), true);
+  assert.equal(fs.readFileSync(file, "utf8"), preamble("2026-11-10"));
+});
+
+test("ensureDailyFile keeps today's file untouched", () => {
+  const file = tmpCsv();
+  ensureDailyFile(file, "2026-11-10");
+  fs.appendFileSync(file, "row\n");
+  assert.equal(ensureDailyFile(file, "2026-11-10"), false);
+  assert.equal(fs.readFileSync(file, "utf8"), `${preamble("2026-11-10")}row\n`);
+});
+
+test("ensureDailyFile recreates the file when the date changes", () => {
+  const file = tmpCsv();
+  ensureDailyFile(file, "2026-11-10");
+  fs.appendFileSync(file, "row\n");
+  assert.equal(ensureDailyFile(file, "2026-11-11"), true);
+  assert.equal(fs.readFileSync(file, "utf8"), preamble("2026-11-11"));
+});
+
+test("ensureDailyFile recreates a file whose first line is not a date line", () => {
+  const file = tmpCsv();
+  fs.writeFileSync(file, "garbage,1,2\nmore\n");
+  assert.equal(ensureDailyFile(file, "2026-11-10"), true);
+  assert.equal(fs.readFileSync(file, "utf8"), preamble("2026-11-10"));
+});
+
+test("ensureDailyFile recreates an empty file", () => {
+  const file = tmpCsv();
+  fs.writeFileSync(file, "");
+  assert.equal(ensureDailyFile(file, "2026-11-10"), true);
+  assert.equal(fs.readFileSync(file, "utf8"), preamble("2026-11-10"));
+});
+
+test("writeReading appends one complete line", () => {
+  const file = tmpCsv();
+  const line = writeReading(file, new Date(2026, 10, 10, 14, 32, 8), buildRow("gas_leak_flame", 0, LOW));
+  assert.equal(line, "14:32:08,mock,CRITICO,1,1110,290,2,900,900,0,1,25.8,28.0,0,1,0,0");
+  assert.equal(fs.readFileSync(file, "utf8"), `${preamble("2026-11-10")}${line}\n`);
+});
+
+test("writeReading rolls over at midnight", () => {
+  const file = tmpCsv();
+  writeReading(file, new Date(2026, 10, 10, 23, 59, 59), buildRow("normal", 0, MID));
+  const line = writeReading(file, new Date(2026, 10, 11, 0, 0, 0), buildRow("normal", 0, MID));
+  assert.equal(fs.readFileSync(file, "utf8"), `${preamble("2026-11-11")}${line}\n`);
+});
+
+test("writeReading recreates a file deleted while running", () => {
+  const file = tmpCsv();
+  const now = new Date(2026, 10, 10, 9, 0, 0);
+  writeReading(file, now, buildRow("normal", 0, MID));
+  fs.unlinkSync(file);
+  const line = writeReading(file, now, buildRow("normal", 0, MID));
+  assert.equal(fs.readFileSync(file, "utf8"), `${preamble("2026-11-10")}${line}\n`);
+});
+
+test("parseArgs uses the documented defaults", () => {
+  assert.deepEqual(parseArgs([]), {
+    scenario: "tour",
+    intervalMs: 1000,
+    output: path.join(__dirname, "daily-report.csv"),
+  });
+});
+
+test("parseArgs reads every option", () => {
+  assert.deepEqual(parseArgs(["--scenario", "smoke", "--interval", "500", "--output", "tmp/x.csv"]), {
+    scenario: "smoke",
+    intervalMs: 500,
+    output: path.resolve("tmp/x.csv"),
+  });
+});
+
+test("parseArgs rejects unknown scenarios", () => {
+  assert.throws(() => parseArgs(["--scenario", "banana"]), /Cenário desconhecido: banana/);
+});
+
+test("parseArgs rejects intervals below 100 ms or not integers", () => {
+  for (const value of ["50", "abc", "100.5"]) {
+    assert.throws(() => parseArgs(["--interval", value]), /--interval/);
+  }
+});
+
+test("parseArgs rejects unknown options and missing values", () => {
+  assert.throws(() => parseArgs(["--foo"]), /Opção desconhecida: --foo/);
+  assert.throws(() => parseArgs(["--scenario"]), /--scenario/);
+  assert.throws(() => parseArgs(["--interval"]), /--interval/);
+});

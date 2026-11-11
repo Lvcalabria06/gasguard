@@ -1,6 +1,9 @@
 // Test-only producer: writes fake but coherent GasGuard readings to daily-report.csv,
 // exactly like the board does. The file format is defined in docs/csv-contract.md.
 
+const fs = require("node:fs");
+const path = require("node:path");
+
 const COLUMNS = [
   "hora", "origem", "nivel", "cenario",
   "mq6", "mq6_base", "mq6_nivel",
@@ -125,6 +128,107 @@ function tourStepAt(elapsedSeconds) {
   throw new Error("unreachable");
 }
 
+/** Reads at most the first 64 bytes: the file grows to ~8 MB per day. */
+function readFirstLine(filePath) {
+  const fd = fs.openSync(filePath, "r");
+  try {
+    const buffer = Buffer.alloc(64);
+    const bytes = fs.readSync(fd, buffer, 0, buffer.length, 0);
+    return buffer.toString("utf8", 0, bytes).split("\n")[0];
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+/** Recreates the file (date line + header) unless it already belongs to `date`. Returns true when it (re)created it. */
+function ensureDailyFile(filePath, date) {
+  const dateLine = `data,${date}`;
+  try {
+    if (readFirstLine(filePath) === dateLine) return false;
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err;
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${dateLine}\n${HEADER_LINE}\n`);
+  return true;
+}
+
+function writeReading(filePath, now, row) {
+  ensureDailyFile(filePath, formatDate(now));
+  const line = toCsvLine(formatTime(now), row);
+  fs.appendFileSync(filePath, `${line}\n`); // single append: readers never see half a line followed by another
+  return line;
+}
+
+function parseArgs(argv) {
+  const options = { scenario: "tour", intervalMs: 1000, output: path.join(__dirname, "daily-report.csv") };
+  for (let i = 0; i < argv.length; i += 2) {
+    const option = argv[i];
+    const value = argv[i + 1];
+    if (!["--scenario", "--interval", "--output"].includes(option)) {
+      throw new Error(`Opção desconhecida: ${option}`);
+    }
+    if (value === undefined) throw new Error(`Falta o valor de ${option}.`);
+    if (option === "--scenario") {
+      if (!SCENARIO_NAMES.includes(value)) {
+        throw new Error(`Cenário desconhecido: ${value}. Use um de: ${SCENARIO_NAMES.join(", ")}`);
+      }
+      options.scenario = value;
+    } else if (option === "--interval") {
+      if (!/^\d+$/.test(value) || Number(value) < 100) {
+        throw new Error("--interval precisa ser um inteiro >= 100 (ms).");
+      }
+      options.intervalMs = Number(value);
+    } else {
+      options.output = path.resolve(value);
+    }
+  }
+  return options;
+}
+
+const USAGE = [
+  "Uso: node mock-daily-report.js [--scenario <nome>] [--interval <ms>] [--output <caminho>]",
+  `  --scenario  ${SCENARIO_NAMES.join(", ")} (padrão: tour)`,
+  "  --interval  milissegundos entre linhas, inteiro >= 100 (padrão: 1000)",
+  "  --output    caminho do CSV (padrão: daily-report.csv na raiz do repositório)",
+].join("\n");
+
+function main() {
+  let options;
+  try {
+    options = parseArgs(process.argv.slice(2));
+  } catch (err) {
+    console.error(err.message);
+    console.error(USAGE);
+    process.exit(1);
+  }
+  const { scenario, intervalMs, output } = options;
+  console.log(`Mock GasGuard: cenário "${scenario}", 1 linha a cada ${intervalMs} ms → ${output}`);
+  console.log("Ctrl+C para parar.");
+
+  const startedAt = Date.now();
+  const tick = () => {
+    const now = new Date();
+    const elapsed = (now.getTime() - startedAt) / 1000;
+    const step = scenario === "tour" ? tourStepAt(elapsed) : { scenario, elapsedInStep: elapsed };
+    const row = buildRow(step.scenario, step.elapsedInStep, Math.random);
+    try {
+      writeReading(output, now, row);
+      console.log(`${formatTime(now)}  ${step.scenario}  ${row.nivel} (${row.cenario})`);
+    } catch (err) {
+      console.error(`Erro ao gravar ${output}: ${err.message}`);
+    }
+  };
+  tick();
+  setInterval(tick, intervalMs);
+  process.on("SIGINT", () => {
+    console.log("Mock encerrado.");
+    process.exit(0);
+  });
+}
+
+if (require.main === module) main();
+
 module.exports = {
   COLUMNS,
   HEADER_LINE,
@@ -136,4 +240,8 @@ module.exports = {
   buildRow,
   toCsvLine,
   tourStepAt,
+  ensureDailyFile,
+  writeReading,
+  parseArgs,
+  main,
 };
