@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { AccountMenu } from "@/components/auth/account-menu";
 import { useReadings } from "@/hooks/use-readings";
 import type { EventFilterState, Reading, RecentReadings } from "@/types";
 
@@ -33,8 +34,10 @@ export function dashboardView(
 
 export function Dashboard({
   initial,
+  email,
 }: {
   initial: RecentReadings | null;
+  email: string | null;
 }) {
   const { readings, events, connection, secondsSinceLast } =
     useReadings(initial);
@@ -44,6 +47,7 @@ export function Dashboard({
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
       <main className="flex flex-1 flex-col gap-4 px-4 py-6">
+        <AccountMenu email={email} />
         <DashboardHeader
           connection={connection}
           secondsSinceLast={secondsSinceLast}
