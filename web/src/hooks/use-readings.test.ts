@@ -1,8 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Reading, RecentReadings, ReportEvent, RiskLevel } from "@/types";
 
-import { initReadings, readingsReducer } from "./use-readings";
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
+import {
+  bindReadingsStream,
+  initReadings,
+  readingsReducer,
+  useReadings,
+} from "./use-readings";
 
 const NOW = new Date(2026, 10, 12, 14, 32, 20).getTime();
 
@@ -224,5 +233,128 @@ describe("readingsReducer", () => {
     expect(state.events).toEqual([MORNING_EVENT]);
     expect(state.streamOpen).toBe(true);
     expect(state.connection).toBe("live");
+  });
+});
+
+class FakeStream {
+  onopen: ((event: Event) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+  closed = false;
+  private listeners = new Map<string, Set<(event: MessageEvent) => void>>();
+
+  addEventListener(type: string, listener: (event: MessageEvent) => void) {
+    const set = this.listeners.get(type) ?? new Set();
+    set.add(listener);
+    this.listeners.set(type, set);
+  }
+
+  removeEventListener(type: string, listener: (event: MessageEvent) => void) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  close() {
+    this.closed = true;
+  }
+
+  emit(type: string, data: string) {
+    const event = { data } as MessageEvent;
+    this.listeners.get(type)?.forEach((listener) => listener(event));
+  }
+}
+
+describe("bindReadingsStream", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("dispatches a parsed reading and ignores ping and bad json", () => {
+    const source = new FakeStream();
+    const dispatch = vi.fn();
+    const refresh = vi.fn();
+    bindReadingsStream({
+      source,
+      dispatch,
+      refresh,
+      now: () => NOW,
+    });
+
+    source.emit("reading", JSON.stringify(reading("2026-11-12T14:32:20")));
+    source.emit("ping", "");
+    source.emit("reading", "{");
+    source.emit("reading", "null");
+    source.emit("reading", JSON.stringify({ level: "NORMAL" }));
+
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "reading",
+      reading: reading("2026-11-12T14:32:20"),
+      now: NOW,
+    });
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("dispatches reset and calls refresh on the reset event", () => {
+    const source = new FakeStream();
+    const dispatch = vi.fn();
+    const refresh = vi.fn();
+    bindReadingsStream({
+      source,
+      dispatch,
+      refresh,
+      now: () => NOW,
+    });
+
+    source.emit("reset", "");
+
+    expect(dispatch).toHaveBeenCalledWith({ type: "reset", now: NOW });
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not refresh on the first open, and refreshes on open after error", () => {
+    const source = new FakeStream();
+    const dispatch = vi.fn();
+    const refresh = vi.fn();
+    bindReadingsStream({
+      source,
+      dispatch,
+      refresh,
+      now: () => NOW,
+    });
+
+    source.onopen?.(new Event("open"));
+    expect(dispatch).toHaveBeenCalledWith({ type: "open", now: NOW });
+    expect(refresh).not.toHaveBeenCalled();
+
+    source.onerror?.(new Event("error"));
+    expect(dispatch).toHaveBeenCalledWith({ type: "error", now: NOW });
+
+    source.onopen?.(new Event("open"));
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes the source on unbind and ignores later events", () => {
+    const source = new FakeStream();
+    const dispatch = vi.fn();
+    const refresh = vi.fn();
+    const unbind = bindReadingsStream({
+      source,
+      dispatch,
+      refresh,
+      now: () => NOW,
+    });
+
+    unbind();
+    source.emit("reset", "");
+    source.emit("reading", JSON.stringify(reading("2026-11-12T14:32:20")));
+
+    expect(source.closed).toBe(true);
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe("useReadings", () => {
+  it("is the frozen client entry that W4 will call", () => {
+    expect(typeof useReadings).toBe("function");
   });
 });

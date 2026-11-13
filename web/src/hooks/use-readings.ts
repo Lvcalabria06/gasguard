@@ -1,3 +1,8 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useReducer, useRef } from "react";
+
 import { detectEvents } from "@/lib/events";
 import type {
   ConnectionStatus,
@@ -8,6 +13,7 @@ import type {
 
 const STALE_SECONDS = 5;
 const WINDOW_MS = 10 * 60 * 1000;
+const TICK_MS = 1000;
 
 export type ReadingsState = {
   readings: Reading[];
@@ -24,6 +30,20 @@ export type ReadingsAction =
   | { type: "open"; now: number }
   | { type: "error"; now: number }
   | { type: "reset"; now: number };
+
+export type ReadingsSource = {
+  addEventListener(
+    type: string,
+    listener: (event: MessageEvent) => void,
+  ): void;
+  removeEventListener(
+    type: string,
+    listener: (event: MessageEvent) => void,
+  ): void;
+  close(): void;
+  onopen: ((event: Event) => void) | null;
+  onerror: ((event: Event) => void) | null;
+};
 
 function parseLocalIso(iso: string): Date | null {
   const [datePart, timePart] = iso.split("T");
@@ -153,4 +173,110 @@ export function readingsReducer(
       );
     }
   }
+}
+
+function parseReading(data: string): Reading | null {
+  try {
+    const parsed: unknown = JSON.parse(data);
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      typeof (parsed as { timestamp?: unknown }).timestamp !== "string"
+    ) {
+      return null;
+    }
+    return parsed as Reading;
+  } catch {
+    return null;
+  }
+}
+
+export function bindReadingsStream(args: {
+  source: ReadingsSource;
+  dispatch: (action: ReadingsAction) => void;
+  refresh: () => void;
+  now: () => number;
+}): () => void {
+  const { source, dispatch, refresh, now } = args;
+  let seenError = false;
+
+  const onReading = (event: MessageEvent) => {
+    const reading = parseReading(event.data);
+    if (reading === null) return;
+    dispatch({ type: "reading", reading, now: now() });
+  };
+
+  const onReset = () => {
+    dispatch({ type: "reset", now: now() });
+    refresh();
+  };
+
+  source.addEventListener("reading", onReading);
+  source.addEventListener("reset", onReset);
+
+  source.onopen = () => {
+    dispatch({ type: "open", now: now() });
+    if (!seenError) return;
+    seenError = false;
+    refresh();
+  };
+
+  source.onerror = () => {
+    seenError = true;
+    dispatch({ type: "error", now: now() });
+  };
+
+  return () => {
+    source.removeEventListener("reading", onReading);
+    source.removeEventListener("reset", onReset);
+    source.onopen = null;
+    source.onerror = null;
+    source.close();
+  };
+}
+
+export function useReadings(initial: RecentReadings | null): {
+  readings: Reading[];
+  events: ReportEvent[];
+  connection: ConnectionStatus;
+  secondsSinceLast: number | null;
+} {
+  const router = useRouter();
+  const initialRef = useRef(initial);
+  const [state, dispatch] = useReducer(
+    readingsReducer,
+    initial,
+    (value) => initReadings(value, Date.now()),
+  );
+
+  useEffect(() => {
+    if (initialRef.current === initial) return;
+    initialRef.current = initial;
+    dispatch({ type: "hydrate", initial, now: Date.now() });
+  }, [initial]);
+
+  useEffect(() => {
+    const source = new EventSource("/api/stream") as ReadingsSource;
+    const unbind = bindReadingsStream({
+      source,
+      dispatch,
+      refresh: () => router.refresh(),
+      now: () => Date.now(),
+    });
+    const tickId = setInterval(
+      () => dispatch({ type: "tick", now: Date.now() }),
+      TICK_MS,
+    );
+    return () => {
+      unbind();
+      clearInterval(tickId);
+    };
+  }, [router]);
+
+  return {
+    readings: state.readings,
+    events: state.events,
+    connection: state.connection,
+    secondsSinceLast: state.secondsSinceLast,
+  };
 }
