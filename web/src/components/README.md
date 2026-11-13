@@ -3,7 +3,7 @@
 **Interface.**
 
 - `ui/`: componentes do shadcn, gerados pelo CLI (`npx shadcn add ...`). Não edite à mão sem motivo.
-- `dashboard/`: as partes da tela única (cartão de risco, métricas, gráfico, eventos e filtros), na Etapa 4.
+- `dashboard/`: a tela única. `dashboard.tsx` é o container (`"use client"`): chama `useReadings` e empilha header → risco → métricas → gráfico → filtros + lista → rodapé. Os outros arquivos da pasta são as partes, só de props.
 
 Container/presentation é convenção, não regra: um componente simples pode usar o hook e renderizar no mesmo arquivo.
 
