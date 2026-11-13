@@ -50,9 +50,9 @@ function authSecret(): string | null {
 }
 
 export async function getSession(): Promise<{ email: string } | null> {
+  const jar = await cookies();
   const secret = authSecret();
   if (secret === null) return null;
-  const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   return verifySession(token, secret);

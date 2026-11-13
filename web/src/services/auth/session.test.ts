@@ -3,20 +3,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 const store = new Map<string, string>();
+let cookieStoreReads = 0;
 
 vi.mock("next/headers", () => ({
-  cookies: async () => ({
-    get: (name: string) => {
-      const value = store.get(name);
-      return value === undefined ? undefined : { name, value };
-    },
-    set: (name: string, value: string) => {
-      store.set(name, value);
-    },
-    delete: (name: string) => {
-      store.delete(name);
-    },
-  }),
+  cookies: async () => {
+    cookieStoreReads += 1;
+    return {
+      get: (name: string) => {
+        const value = store.get(name);
+        return value === undefined ? undefined : { name, value };
+      },
+      set: (name: string, value: string) => {
+        store.set(name, value);
+      },
+      delete: (name: string) => {
+        store.delete(name);
+      },
+    };
+  },
 }));
 
 import {
@@ -32,8 +36,9 @@ const SECRET = "test-auth-secret";
 
 beforeEach(() => {
   store.clear();
+  cookieStoreReads = 0;
   process.env.AUTH_SECRET = SECRET;
-  process.env.NODE_ENV = "test";
+  vi.stubEnv("NODE_ENV", "test");
 });
 
 describe("signSession / verifySession", () => {
@@ -54,6 +59,7 @@ describe("getSession / setSession / clearSession", () => {
     store.set(SESSION_COOKIE, signSession("ada@example.com", SECRET));
 
     expect(await getSession()).toBeNull();
+    expect(cookieStoreReads).toBe(1);
   });
 
   it("returns null when the cookie is missing or tampered", async () => {
