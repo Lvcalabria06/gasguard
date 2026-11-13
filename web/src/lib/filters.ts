@@ -1,19 +1,8 @@
 import type { EventFilterState, EventPeriod, ReportEvent, RiskLevel } from "@/types";
 
-const HOUR_MS = 60 * 60 * 1000;
+import { parseLocalIso } from "./format";
 
-function parseLocalIso(iso: string): Date | null {
-  const [datePart, timePart] = iso.split("T");
-  if (!datePart || !timePart || timePart.includes("Z") || timePart.includes("+")) {
-    return null;
-  }
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute, second] = timePart.split(":").map(Number);
-  if ([year, month, day, hour, minute, second].some((value) => !Number.isFinite(value))) {
-    return null;
-  }
-  return new Date(year, month - 1, day, hour, minute, second);
-}
+const HOUR_MS = 60 * 60 * 1000;
 
 function localDateKey(date: Date): string {
   const year = date.getFullYear();

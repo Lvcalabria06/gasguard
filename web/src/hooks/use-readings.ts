@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useReducer, useRef } from "react";
 
 import { detectEvents } from "@/lib/events";
+import { parseLocalIso } from "@/lib/format";
 import type {
   ConnectionStatus,
   Reading,
@@ -44,28 +45,6 @@ export type ReadingsSource = {
   onopen: ((event: Event) => void) | null;
   onerror: ((event: Event) => void) | null;
 };
-
-function parseLocalIso(iso: string): Date | null {
-  const [datePart, timePart] = iso.split("T");
-  if (
-    !datePart ||
-    !timePart ||
-    timePart.includes("Z") ||
-    timePart.includes("+")
-  ) {
-    return null;
-  }
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute, second] = timePart.split(":").map(Number);
-  if (
-    [year, month, day, hour, minute, second].some(
-      (value) => !Number.isFinite(value),
-    )
-  ) {
-    return null;
-  }
-  return new Date(year, month - 1, day, hour, minute, second);
-}
 
 function keepLastMinutes(readings: Reading[]): Reading[] {
   if (readings.length === 0) return [];

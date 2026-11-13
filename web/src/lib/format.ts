@@ -1,4 +1,4 @@
-function parseLocalIso(iso: string): Date | null {
+export function parseLocalIso(iso: string): Date | null {
   const [datePart, timePart] = iso.split("T");
   if (!datePart || !timePart || timePart.includes("Z") || timePart.includes("+")) {
     return null;

@@ -11,6 +11,7 @@ import {
   ACADEMIC_FOOTER,
   dashboardView,
   latestReading,
+  liveReading,
 } from "./dashboard";
 
 function reading(
@@ -43,6 +44,15 @@ describe("latestReading", () => {
 
     expect(latestReading([first, last])).toBe(last);
     expect(latestReading([first, last])).not.toBe(first);
+  });
+});
+
+describe("liveReading", () => {
+  it("hides the last metrics when the stream is stale", () => {
+    const stale = reading("2026-11-12T14:32:00", "NORMAL");
+    expect(liveReading(stale, "no_data")).toBeNull();
+    expect(liveReading(stale, "live")).toBe(stale);
+    expect(liveReading(stale, "reconnecting")).toBe(stale);
   });
 });
 

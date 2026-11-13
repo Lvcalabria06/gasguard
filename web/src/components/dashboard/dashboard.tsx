@@ -4,7 +4,12 @@ import { useState } from "react";
 
 import { AccountMenu } from "@/components/auth/account-menu";
 import { useReadings } from "@/hooks/use-readings";
-import type { EventFilterState, Reading, RecentReadings } from "@/types";
+import type {
+  ConnectionStatus,
+  EventFilterState,
+  Reading,
+  RecentReadings,
+} from "@/types";
 
 import { DashboardHeader } from "./dashboard-header";
 import { DEFAULT_EVENT_FILTER, EventFilters } from "./event-filters";
@@ -18,6 +23,13 @@ export const ACADEMIC_FOOTER =
 
 export function latestReading(readings: Reading[]): Reading | null {
   return readings.length === 0 ? null : readings[readings.length - 1];
+}
+
+export function liveReading(
+  reading: Reading | null,
+  connection: ConnectionStatus,
+): Reading | null {
+  return connection === "no_data" ? null : reading;
 }
 
 export function dashboardView(
@@ -53,7 +65,7 @@ export function Dashboard({
           secondsSinceLast={secondsSinceLast}
         />
         <RiskCard reading={view.latest} connection={connection} />
-        <MetricsGrid reading={view.latest} />
+        <MetricsGrid reading={liveReading(view.latest, connection)} />
         <ReadingsChart readings={view.readings} />
         <div className="space-y-3">
           <EventFilters value={view.filter} onChange={setFilter} />

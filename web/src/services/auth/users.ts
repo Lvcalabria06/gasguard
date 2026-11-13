@@ -24,7 +24,10 @@ export function parseEmail(raw: string): string | null {
 }
 
 export function getUsersPath(): string {
-  return resolve(process.cwd(), process.env.AUTH_USERS_PATH ?? ".data/users.json");
+  return resolve(
+    /* turbopackIgnore: true */ process.cwd(),
+    process.env.AUTH_USERS_PATH ?? ".data/users.json",
+  );
 }
 
 function readUsers(path: string): StoredUser[] {

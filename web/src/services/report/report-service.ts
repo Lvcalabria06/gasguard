@@ -17,7 +17,10 @@ const WINDOW_SECONDS = 10 * 60;
 const POLL_MS = 500;
 
 export function getReportPath(): string {
-  return resolve(process.cwd(), process.env.DAILY_REPORT_PATH ?? DEFAULT_REPORT_PATH);
+  return resolve(
+    /* turbopackIgnore: true */ process.cwd(),
+    process.env.DAILY_REPORT_PATH ?? DEFAULT_REPORT_PATH,
+  );
 }
 
 function secondsOfDay(timestamp: string): number {
