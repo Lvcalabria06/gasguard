@@ -11,6 +11,7 @@ Contexto, decisões e planos do projeto. Comece por aqui.
 | [decisions.md](decisions.md) | Registro das decisões de arquitetura e o motivo de cada uma |
 | [roadmap.md](roadmap.md) | O que já foi feito e as próximas etapas, na ordem |
 | [superpowers/specs/](superpowers/specs/) | Specs de design escritas com o plugin Superpowers |
+| [superpowers/specs/2026-11-12-web-worktree-map.md](superpowers/specs/2026-11-12-web-worktree-map.md) | Orquestração da `feat/web`: pipeline plano → execução → review → merge por fatia (Etapas 3–5) |
 | [superpowers/plans/](superpowers/plans/) | Planos de implementação do Superpowers (um por etapa) |
 
 ## Regras rápidas
