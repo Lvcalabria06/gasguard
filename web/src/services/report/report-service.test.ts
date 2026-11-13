@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { getRecentReadings, getReportPath } from "@/services/report/report-service";
+import { getRecentReadings, getReportPath, watchReadings } from "@/services/report/report-service";
 import type { Reading } from "@/types";
 
 const HEADER =
@@ -215,3 +215,113 @@ describe("getRecentReadings", () => {
     );
   });
 });
+
+describe("watchReadings", () => {
+  let stop: (() => void) | undefined;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    stop?.();
+    stop = undefined;
+    vi.useRealTimers();
+  });
+
+  it("does not replay existing lines, then emits each appended reading", () => {
+    writeFileSync(
+      reportPath,
+      reportFile(DATE, [csvLine("14:32:08"), csvLine("14:32:09")]),
+    );
+
+    const onReading = vi.fn();
+    const onReset = vi.fn();
+    stop = watchReadings({ onReading, onReset });
+
+    expect(onReading).not.toHaveBeenCalled();
+    expect(onReset).not.toHaveBeenCalled();
+
+    writeFileSync(
+      reportPath,
+      reportFile(DATE, [csvLine("14:32:08"), csvLine("14:32:09"), csvLine("14:32:10", "ALERTA", { cenario: "7" })]),
+    );
+    vi.advanceTimersByTime(500);
+
+    expect(onReading).toHaveBeenCalledTimes(1);
+    expect(onReading.mock.calls[0][0].timestamp).toBe("2026-11-10T14:32:10");
+    expect(onReading.mock.calls[0][0].level).toBe("ALERT");
+    expect(onReset).not.toHaveBeenCalled();
+
+    stop();
+    writeFileSync(
+      reportPath,
+      reportFile(DATE, [
+        csvLine("14:32:08"),
+        csvLine("14:32:09"),
+        csvLine("14:32:10", "ALERTA", { cenario: "7" }),
+        csvLine("14:32:11"),
+      ]),
+    );
+    vi.advanceTimersByTime(500);
+    expect(onReading).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onReset when the file shrinks and does not replay the new snapshot", () => {
+    writeFileSync(
+      reportPath,
+      reportFile(DATE, [csvLine("14:32:08"), csvLine("14:32:09"), csvLine("14:32:10")]),
+    );
+
+    const onReading = vi.fn();
+    const onReset = vi.fn();
+    stop = watchReadings({ onReading, onReset });
+
+    writeFileSync(reportPath, reportFile("2026-11-11", [csvLine("00:00:01")]));
+    vi.advanceTimersByTime(500);
+
+    expect(onReset).toHaveBeenCalledTimes(1);
+    expect(onReading).not.toHaveBeenCalled();
+
+    writeFileSync(
+      reportPath,
+      reportFile("2026-11-11", [csvLine("00:00:01"), csvLine("00:00:02", "ALERTA", { cenario: "7" })]),
+    );
+    vi.advanceTimersByTime(500);
+
+    expect(onReset).toHaveBeenCalledTimes(1);
+    expect(onReading).toHaveBeenCalledTimes(1);
+    expect(onReading.mock.calls[0][0].timestamp).toBe("2026-11-11T00:00:02");
+
+    stop();
+  });
+
+  it("skips an invalid appended line and keeps watching", () => {
+    writeFileSync(reportPath, reportFile(DATE, [csvLine("14:32:08")]));
+
+    const onReading = vi.fn();
+    stop = watchReadings({ onReading, onReset: vi.fn() });
+
+    const badLine = csvLine("14:32:09").split(",").slice(0, 16).join(",");
+    writeFileSync(reportPath, reportFile(DATE, [csvLine("14:32:08"), badLine]));
+    vi.advanceTimersByTime(500);
+
+    expect(onReading).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith(
+      "[report-service] skipped invalid CSV line:",
+      badLine,
+    );
+
+    writeFileSync(
+      reportPath,
+      reportFile(DATE, [csvLine("14:32:08"), badLine, csvLine("14:32:10")]),
+    );
+    vi.advanceTimersByTime(500);
+
+    expect(onReading).toHaveBeenCalledTimes(1);
+    expect(onReading.mock.calls[0][0].timestamp).toBe("2026-11-10T14:32:10");
+
+    stop();
+  });
+});
+

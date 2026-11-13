@@ -14,6 +14,7 @@ const HEADER =
   "hora,origem,nivel,cenario,mq6,mq6_base,mq6_nivel,mq2,mq2_base,mq2_nivel,chama,temp,temp_limite,temp_alta,movimento,fogao,seg_sem_movimento";
 const DATE_LINE = /^data,(\d{4}-\d{2}-\d{2})$/;
 const WINDOW_SECONDS = 10 * 60;
+const POLL_MS = 500;
 
 export function getReportPath(): string {
   return resolve(process.cwd(), process.env.DAILY_REPORT_PATH ?? DEFAULT_REPORT_PATH);
@@ -88,4 +89,48 @@ export async function getRecentReadings(): Promise<RecentReadings | null> {
     readings: recentWindow(readings),
     events: detectEvents(readings),
   };
+}
+
+export function watchReadings(handlers: {
+  onReading: (reading: Reading) => void;
+  onReset: () => void;
+}): () => void {
+  let previousSize = 0;
+  let seeded = false;
+
+  const tick = () => {
+    const content = readReportFile();
+    if (content === null) return;
+
+    const date = parseEnvelope(content);
+    if (date === null) return;
+
+    const snapshot = readNewLines(content, previousSize);
+
+    if (!seeded) {
+      previousSize = snapshot.size;
+      seeded = true;
+      return;
+    }
+
+    if (snapshot.truncated) {
+      handlers.onReset();
+      previousSize = snapshot.size;
+      return;
+    }
+
+    for (const line of snapshot.lines) {
+      const reading = parseCsvLine(line, date);
+      if (reading === null) {
+        console.error("[report-service] skipped invalid CSV line:", line);
+        continue;
+      }
+      handlers.onReading(reading);
+    }
+    previousSize = snapshot.size;
+  };
+
+  tick();
+  const intervalId = setInterval(tick, POLL_MS);
+  return () => clearInterval(intervalId);
 }
