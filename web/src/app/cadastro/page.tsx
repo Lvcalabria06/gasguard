@@ -6,6 +6,7 @@ import {
   type AuthFormState,
 } from "@/components/auth/auth-form";
 import { parseEmail } from "@/lib/parse-email";
+import { signupErrorMessage } from "@/lib/signup-error";
 import { auth } from "@/services/auth/auth";
 import { getSessionUser } from "@/services/auth/get-session";
 
@@ -39,8 +40,9 @@ export async function signup(
       body: { email, password, name },
       headers: await headers(),
     });
-  } catch {
-    return { error: "E-mail já cadastrado." };
+  } catch (error) {
+    console.error("[auth] signup failed", error);
+    return { error: signupErrorMessage(error) };
   }
   redirect("/");
 }

@@ -28,8 +28,8 @@ describe("authProxyDecision", () => {
     expect(authProxyDecision("/api/stream", true)).toBe("next");
   });
 
-  it("sends signed-in users away from auth pages", () => {
-    expect(authProxyDecision("/login", true)).toEqual({ redirect: "/" });
-    expect(authProxyDecision("/cadastro", true)).toEqual({ redirect: "/" });
+  it("lets auth pages through even with a cookie (pages validate the session)", () => {
+    expect(authProxyDecision("/login", true)).toBe("next");
+    expect(authProxyDecision("/cadastro", true)).toBe("next");
   });
 });

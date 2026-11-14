@@ -66,7 +66,9 @@ node --test mock-daily-report.test.js
 
 # Web (em web/)
 npm install
+# Copie .env.example → .env e preencha BETTER_AUTH_SECRET (≥ 32 chars) e BETTER_AUTH_URL
 npm run dev        # http://localhost:3000 e http://<IP-do-PC>:3000
+                   # (migrate do SQLite de auth roda no startup via instrumentation)
 npm test
 npm run lint
 npm run build

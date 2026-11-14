@@ -81,14 +81,26 @@ describe("signup", () => {
     ).resolves.toEqual({ error: "As senhas não coincidem." });
   });
 
-  it("returns an error when the API fails", async () => {
-    signUpEmail.mockRejectedValue(new Error("duplicate"));
+  it("returns a duplicate message for USER_ALREADY_EXISTS", async () => {
+    signUpEmail.mockRejectedValue({
+      body: { code: "USER_ALREADY_EXISTS" },
+    });
     await expect(
       signup(
         { error: null },
         form("Ada", "ada@example.com", "password1", "password1"),
       ),
     ).resolves.toEqual({ error: "E-mail já cadastrado." });
+  });
+
+  it("returns a generic message for unexpected API failures", async () => {
+    signUpEmail.mockRejectedValue(new Error("no such table: user"));
+    await expect(
+      signup(
+        { error: null },
+        form("Ada", "ada@example.com", "password1", "password1"),
+      ),
+    ).resolves.toEqual({ error: "Não foi possível criar a conta." });
   });
 
   it("calls signUpEmail and redirects home", async () => {

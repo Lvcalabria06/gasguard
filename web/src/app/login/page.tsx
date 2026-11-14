@@ -28,7 +28,8 @@ export async function login(
       body: { email, password },
       headers: await headers(),
     });
-  } catch {
+  } catch (error) {
+    console.error("[auth] login failed", error);
     return { error: "E-mail ou senha inválidos." };
   }
   redirect("/");
