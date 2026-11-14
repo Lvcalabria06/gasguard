@@ -74,34 +74,36 @@ describe("shouldStartAlertWatcher", () => {
 });
 
 describe("handleCriticalReading", () => {
-  it("logs and skips fetch when there are no users", async () => {
+  it("logs and skips send when there are no users", async () => {
     await handleCriticalReading({
       previousLevel: "HIGH",
       reading: reading("CRITICAL"),
       now: 1_000,
       users: [],
       lastSent,
-      apiKey: "re_test",
-      from: "GasGuard <alertas@localhost>",
+      user: "gasguard@gmail.com",
+      pass: "app-password",
+      from: "GasGuard <gasguard@gmail.com>",
       send,
     });
     expect(console.info).toHaveBeenCalledWith("[alerts] no users; skip");
     expect(send).not.toHaveBeenCalled();
   });
 
-  it("logs and skips fetch when RESEND_API_KEY is missing", async () => {
+  it("logs and skips send when Gmail credentials are missing", async () => {
     await handleCriticalReading({
       previousLevel: "HIGH",
       reading: reading("CRITICAL"),
       now: 1_000,
       users: [{ email: "ada@example.com" }],
       lastSent,
-      apiKey: undefined,
-      from: "GasGuard <alertas@localhost>",
+      user: undefined,
+      pass: undefined,
+      from: "GasGuard <gasguard@gmail.com>",
       send,
     });
     expect(console.info).toHaveBeenCalledWith(
-      "[alerts] RESEND_API_KEY missing; skip",
+      "[alerts] Gmail credentials missing; skip",
     );
     expect(send).not.toHaveBeenCalled();
   });
@@ -113,8 +115,9 @@ describe("handleCriticalReading", () => {
       now: 1_000,
       users: [{ email: "ada@example.com" }],
       lastSent,
-      apiKey: "re_test",
-      from: "GasGuard <alertas@localhost>",
+      user: "gasguard@gmail.com",
+      pass: "app-password",
+      from: "GasGuard <gasguard@gmail.com>",
       send,
     });
     expect(send).not.toHaveBeenCalled();
@@ -133,8 +136,9 @@ describe("handleCriticalReading", () => {
       now: 10_000,
       users,
       lastSent,
-      apiKey: "re_test",
-      from: "GasGuard <alertas@localhost>",
+      user: "gasguard@gmail.com",
+      pass: "app-password",
+      from: "GasGuard <gasguard@gmail.com>",
       send,
     });
 
@@ -143,8 +147,9 @@ describe("handleCriticalReading", () => {
       to: "ada@example.com",
       subject: "[SIMULAÇÃO] GasGuard: risco crítico",
       text: expect.stringContaining("Nível: Crítico"),
-      apiKey: "re_test",
-      from: "GasGuard <alertas@localhost>",
+      user: "gasguard@gmail.com",
+      pass: "app-password",
+      from: "GasGuard <gasguard@gmail.com>",
     });
     expect(lastSent.get("ada@example.com")).toBe(10_000);
 
@@ -155,8 +160,9 @@ describe("handleCriticalReading", () => {
       now: 10_000 + 5 * 60 * 1000 - 1,
       users,
       lastSent,
-      apiKey: "re_test",
-      from: "GasGuard <alertas@localhost>",
+      user: "gasguard@gmail.com",
+      pass: "app-password",
+      from: "GasGuard <gasguard@gmail.com>",
       send,
     });
     expect(send).not.toHaveBeenCalled();
@@ -168,8 +174,9 @@ describe("handleCriticalReading", () => {
       now: 10_000 + 5 * 60 * 1000,
       users,
       lastSent,
-      apiKey: "re_test",
-      from: "GasGuard <alertas@localhost>",
+      user: "gasguard@gmail.com",
+      pass: "app-password",
+      from: "GasGuard <gasguard@gmail.com>",
       send,
     });
     expect(send).toHaveBeenCalledTimes(2);
@@ -186,8 +193,9 @@ describe("handleCriticalReading", () => {
       now: 1_000,
       users: [{ email: "ada@example.com" }],
       lastSent,
-      apiKey: "re_test",
-      from: "GasGuard <alertas@localhost>",
+      user: "gasguard@gmail.com",
+      pass: "app-password",
+      from: "GasGuard <gasguard@gmail.com>",
       send,
     });
     expect(lastSent.has("ada@example.com")).toBe(false);
@@ -225,7 +233,8 @@ describe("startAlertWatcher", () => {
       return true;
     });
 
-    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("GMAIL_USER", "gasguard@gmail.com");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "app-password");
     startAlertWatcher(send);
 
     handlers?.onReading(reading("CRITICAL"));
@@ -238,7 +247,8 @@ describe("startAlertWatcher", () => {
   });
 
   it("treats onReset as previous=null so the next CRITICAL notifies again", async () => {
-    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("GMAIL_USER", "gasguard@gmail.com");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "app-password");
     const now = 1_000_000;
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
     startAlertWatcher(send);

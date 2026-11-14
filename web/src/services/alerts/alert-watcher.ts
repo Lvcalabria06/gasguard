@@ -27,7 +27,8 @@ export async function handleCriticalReading(input: {
   now: number;
   users: { email: string }[];
   lastSent: Map<string, number>;
-  apiKey: string | undefined;
+  user: string | undefined;
+  pass: string | undefined;
   from: string;
   send: AlertSend;
 }): Promise<void> {
@@ -36,8 +37,8 @@ export async function handleCriticalReading(input: {
     console.info("[alerts] no users; skip");
     return;
   }
-  if (!input.apiKey) {
-    console.info("[alerts] RESEND_API_KEY missing; skip");
+  if (!input.user || !input.pass) {
+    console.info("[alerts] Gmail credentials missing; skip");
     return;
   }
   for (const user of input.users) {
@@ -46,7 +47,8 @@ export async function handleCriticalReading(input: {
       to: user.email,
       subject: alertSubject(input.reading.source),
       text: alertText(input.reading),
-      apiKey: input.apiKey,
+      user: input.user,
+      pass: input.pass,
       from: input.from,
     });
     if (ok) input.lastSent.set(user.email, input.now);
@@ -62,15 +64,18 @@ export function startAlertWatcher(send: AlertSend = sendAlertEmail): () => void 
       onReading: (reading) => {
         const from = previous;
         previous = reading.level;
+        const gmailUser = process.env.GMAIL_USER || undefined;
         void handleCriticalReading({
           previousLevel: from,
           reading,
           now: Date.now(),
           users: listUsers(),
           lastSent,
-          apiKey: process.env.RESEND_API_KEY || undefined,
+          user: gmailUser,
+          pass: process.env.GMAIL_APP_PASSWORD || undefined,
           from:
             process.env.ALERT_FROM_EMAIL ??
+            gmailUser ??
             "GasGuard <alertas@localhost>",
           send,
         }).catch((error) => {

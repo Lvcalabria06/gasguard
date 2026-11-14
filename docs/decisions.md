@@ -67,9 +67,10 @@ Identificadores em inglês (`useReadings`, `Reading`, `RiskLevel`). Os textos da
 `refactor/monorepo-structure` só move o firmware, documenta o contrato do CSV, cria o esqueleto do web e implementa o mock. A linha `CSV,...` no firmware, a mudança para 1 s e o filtro ficam no [roadmap](roadmap.md).
 **Por quê:** refactor e mudança de comportamento em PRs separados, e o firmware precisa ser testado na placa real.
 
-## D14. E-mail de alerta é uma etapa futura
+## D14. E-mail de alerta via Gmail SMTP
 
-O envio de e-mail **gratuito** (Gmail SMTP com senha de app, ou o plano grátis do Resend) para alertas críticos depende de uma tela de login/cadastro para saber o e-mail do usuário. O objetivo é demonstrar na apresentação: "aconteceu um caso crítico e o usuário recebeu um e-mail".
+O envio de e-mail **gratuito** para alertas críticos usa Gmail SMTP com senha de app (`GMAIL_USER` + `GMAIL_APP_PASSWORD`, via `nodemailer`). Depende de login/cadastro para saber o e-mail do usuário. O objetivo é demonstrar na apresentação: "aconteceu um caso crítico e o usuário recebeu um e-mail".
+**Alternativa descartada:** Resend (API HTTP, plano grátis) — troca pedida para evitar conta/domínio de provedor externo; Gmail basta para a demo.
 
 ## D15. O web é organizado por camada, em 6 pastas
 

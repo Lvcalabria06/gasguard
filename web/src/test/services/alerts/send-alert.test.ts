@@ -5,56 +5,48 @@ vi.mock("server-only", () => ({}));
 import { sendAlertEmail } from "@/services/alerts/send-alert";
 
 describe("sendAlertEmail", () => {
-  it("POSTs JSON to api.resend.com/emails and returns true on 2xx", async () => {
-    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
-      expect(input).toBe("https://api.resend.com/emails");
-      expect(init?.method).toBe("POST");
-      expect(init?.headers).toEqual({
-        Authorization: "Bearer re_test",
-        "Content-Type": "application/json",
-      });
-      expect(JSON.parse(String(init?.body))).toEqual({
-        from: "GasGuard <alertas@localhost>",
-        to: ["ada@example.com"],
-        subject: "[SIMULAÇÃO] GasGuard: risco crítico",
-        text: "corpo",
-      });
-      return new Response("{}", { status: 200 });
-    });
+  it("sends via SMTP sendMail and returns true on success", async () => {
+    const sendMail = vi.fn(async () => undefined);
 
     await expect(
       sendAlertEmail({
         to: "ada@example.com",
         subject: "[SIMULAÇÃO] GasGuard: risco crítico",
         text: "corpo",
-        apiKey: "re_test",
-        from: "GasGuard <alertas@localhost>",
-        fetchImpl,
+        user: "gasguard@gmail.com",
+        pass: "app-password",
+        from: "GasGuard <gasguard@gmail.com>",
+        sendMail,
       }),
     ).resolves.toBe(true);
-    expect(fetchImpl).toHaveBeenCalledOnce();
+
+    expect(sendMail).toHaveBeenCalledExactlyOnceWith({
+      from: "GasGuard <gasguard@gmail.com>",
+      to: "ada@example.com",
+      subject: "[SIMULAÇÃO] GasGuard: risco crítico",
+      text: "corpo",
+    });
   });
 
-  it("returns false and logs when Resend rejects the request", async () => {
+  it("returns false and logs when SMTP sendMail rejects", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const fetchImpl = vi.fn<typeof fetch>(
-      async () => new Response("nope", { status: 403 }),
-    );
+    const error = new Error("Invalid login");
+    const sendMail = vi.fn(async () => {
+      throw error;
+    });
 
     await expect(
       sendAlertEmail({
         to: "ada@example.com",
         subject: "x",
         text: "y",
-        apiKey: "re_test",
-        from: "GasGuard <alertas@localhost>",
-        fetchImpl,
+        user: "gasguard@gmail.com",
+        pass: "bad",
+        from: "GasGuard <gasguard@gmail.com>",
+        sendMail,
       }),
     ).resolves.toBe(false);
-    expect(console.error).toHaveBeenCalledWith(
-      "[alerts] resend",
-      403,
-      "nope",
-    );
+
+    expect(console.error).toHaveBeenCalledWith("[alerts] smtp", error);
   });
 });

@@ -41,7 +41,7 @@ Contrato: [csv-contract.md → Lado do hardware](csv-contract.md#lado-do-hardwar
 ## Etapa 5: Alertas por e-mail
 
 - [ ] Login/cadastro simples para saber o e-mail do usuário.
-- [ ] Envio gratuito (Gmail SMTP com senha de app ou Resend) ao entrar em CRITICO, com intervalo anti-repetição.
+- [x] Envio gratuito (Gmail SMTP com senha de app) ao entrar em CRITICO, com intervalo anti-repetição.
 - [ ] Selo `[SIMULAÇÃO]` no assunto quando a origem for o mock.
 
 ## Futuro (requisitos da disciplina)
