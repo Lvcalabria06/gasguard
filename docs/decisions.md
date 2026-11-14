@@ -55,7 +55,7 @@ A ordem é: status e risco → métricas → gráfico de 10 min → eventos. Os 
 
 ## D11. Stack do web
 
-Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS, shadcn/ui, Recharts, lucide-react, Vitest e npm. Sem banco, sem login e sem estado global.
+Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS, shadcn/ui, Recharts, lucide-react, Vitest e npm. Sem banco, sem login e sem estado global. (login/banco locais: ver D21).
 
 ## D12. O código do web e do mock é em inglês, com camadas separadas
 
@@ -109,3 +109,10 @@ O `hardware/` e o `web/` são projetos independentes. Nenhum importa, lê ou exe
 Os `*.test.ts` do Vitest ficam em `web/src/test/`, espelhando o caminho do arquivo sob teste (`lib/risk-level.ts` → `test/lib/risk-level.test.ts`). Imports do código sob teste usam o alias `@/`.
 **Por quê:** separa produção de teste sem mudar as camadas; a árvore de `app/`, `components/`, `hooks/`, `services/` e `lib/` fica só com o que roda.
 **Alternativa descartada:** manter o teste ao lado do arquivo (`x.ts` → `x.test.ts`), que misturava as pastas de produção.
+
+## D21. Auth com Better Auth + SQLite local; app protegido
+
+Login/cadastro usam Better Auth com `better-sqlite3` em `web/.data/auth.sqlite`. Não há Postgres nem Docker no protótipo. O dashboard e o SSE exigem sessão; `/login`, `/cadastro` e `/api/auth/*` são públicos. O cadastro pede nome; a navbar mostra nome e e-mail. Alertas leem e-mails do SQLite.
+**Substitui** o trecho de D11 (“Sem banco, sem login…”) e a auth caseira JSON+HMAC da Etapa 5.
+**Por quê:** menos código nosso, DX igual a um arquivo local, foco na lógica de produto.
+**Alternativa descartada:** Postgres no Docker (processo extra); JSON caseiro (sessão/hash manuais); Better Auth sem proteger o app.
