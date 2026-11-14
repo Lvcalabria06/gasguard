@@ -4,6 +4,16 @@ import type { Reading } from "@/types";
 
 import { formatSse } from "@/app/api/stream/sse-format";
 
+vi.mock("server-only", () => ({}));
+
+const { getSessionUser } = vi.hoisted(() => ({
+  getSessionUser: vi.fn(),
+}));
+
+vi.mock("@/services/auth/get-session", () => ({
+  getSessionUser,
+}));
+
 vi.mock("@/services/report/report-service", () => ({
   watchReadings: vi.fn(),
 }));
@@ -40,6 +50,11 @@ beforeEach(() => {
   vi.useFakeTimers();
   stop = vi.fn<() => void>();
   handlers = undefined;
+  getSessionUser.mockReset();
+  getSessionUser.mockResolvedValue({
+    name: "Ada",
+    email: "ada@example.com",
+  });
   watch.mockImplementation((next) => {
     handlers = next;
     return stop;
@@ -59,6 +74,13 @@ async function openStream(): Promise<Response> {
 }
 
 describe("GET /api/stream", () => {
+  it("returns 401 when there is no session", async () => {
+    getSessionUser.mockResolvedValue(null);
+    const response = await openStream();
+    expect(response.status).toBe(401);
+    expect(watch).not.toHaveBeenCalled();
+  });
+
   it("returns the frozen SSE headers", async () => {
     const response = await openStream();
 

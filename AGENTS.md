@@ -37,11 +37,11 @@ docs/                  decisões, contrato, roadmap, specs e planos do Superpowe
 - **O nível de risco vem do firmware.** O web não recalcula regras de risco.
 - **Sem dados há mais de 5 s:** mostre "sem dados", nunca "normal".
 - **Camadas do web** (tabela completa em [`docs/architecture.md`](docs/architecture.md#camadas-do-web)). Não crie pastas de primeiro nível novas em `web/src` (exceto `test/`):
-  - `app/`: rotas finas. `page.tsx` (Server Component) faz a carga inicial; `api/stream` é o SSE. Não existe `/api/report`.
-  - `components/`: interface (`ui/` é do shadcn, `dashboard/` é a tela).
+  - `app/`: rotas finas. `page.tsx` (Server Component) faz a carga inicial; `api/stream` é o SSE; `api/auth` é o Better Auth. Não existe `/api/report`. Dashboard e SSE exigem sessão ([D21](docs/decisions.md#d21-auth-com-better-auth--sqlite-local-app-protegido)).
+  - `components/`: interface (`ui/` é do shadcn, `dashboard/` é a tela, `auth/` é login/menu).
   - `hooks/`: estado no navegador. Na reconexão do SSE, `router.refresh()`.
-  - `services/`: lógica do servidor; todo arquivo começa com `import "server-only";`.
-  - `lib/`: funções puras. **Regra de negócio fica aqui**, nunca em componente ou hook.
+  - `services/`: lógica do servidor; todo arquivo começa com `import "server-only";`. Auth em `services/auth/` (Better Auth + SQLite em `.data/auth.sqlite`).
+  - `lib/`: funções puras. **Regra de negócio fica aqui**, nunca em componente ou hook. `proxy.ts` na raiz de `src/` usa `lib/auth-proxy`.
   - `types/`: **só tipos**, nada executável.
   - `test/`: testes Vitest (`*.test.ts`), espelhando o caminho do arquivo sob teste (`lib/x.ts` → `test/lib/x.test.ts`).
   - Importe só "para baixo": `app` → `components` → `hooks` → `services` → `lib` → `types` (`components` e `hooks` nunca importam `services`).

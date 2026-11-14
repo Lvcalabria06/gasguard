@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/services/auth/get-session";
 import { watchReadings } from "@/services/report/report-service";
 
 import { formatSse } from "./sse-format";
@@ -13,6 +14,11 @@ const SSE_HEADERS = {
 };
 
 export async function GET(request: Request) {
+  const user = await getSessionUser();
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   const encoder = new TextEncoder();
   let shutdown = () => {};
 
