@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
+
 vi.mock("next/server", () => ({
   connection: vi.fn(async () => {}),
 }));
@@ -8,8 +10,22 @@ vi.mock("@/services/report/report-service", () => ({
   getRecentReadings: vi.fn(),
 }));
 
-vi.mock("@/services/auth/session", () => ({
-  getSession: vi.fn(),
+const { getSessionUser } = vi.hoisted(() => ({
+  getSessionUser: vi.fn(),
+}));
+
+vi.mock("@/services/auth/get-session", () => ({
+  getSessionUser,
+}));
+
+vi.mock("@/app/login/actions", () => ({
+  signOut: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  }),
 }));
 
 vi.mock("@/components/dashboard/dashboard", () => ({
@@ -19,20 +35,23 @@ vi.mock("@/components/dashboard/dashboard", () => ({
 }));
 
 import { Dashboard } from "@/components/dashboard/dashboard";
-import { getSession } from "@/services/auth/session";
 import { getRecentReadings } from "@/services/report/report-service";
 import type { RecentReadings } from "@/types";
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
 
 import Home from "@/app/page";
 
 type HomeElement = {
   type: unknown;
-  props: { initial: RecentReadings | null; email: string | null };
+  props: {
+    initial: RecentReadings | null;
+    user: { name: string; email: string };
+    signOutAction: unknown;
+  };
 };
 
 const getRecent = vi.mocked(getRecentReadings);
-const readSession = vi.mocked(getSession);
 const waitForRequest = vi.mocked(connection);
 
 const SNAPSHOT: RecentReadings = {
@@ -47,11 +66,15 @@ describe("Home", () => {
     waitForRequest.mockResolvedValue(undefined);
     getRecent.mockReset();
     getRecent.mockResolvedValue(null);
-    readSession.mockReset();
-    readSession.mockResolvedValue(null);
+    getSessionUser.mockReset();
+    vi.mocked(redirect).mockClear();
   });
 
-  it("does not read the CSV or the session until connection() resolves", async () => {
+  it("does not read the CSV until connection() resolves", async () => {
+    getSessionUser.mockResolvedValue({
+      name: "Ada",
+      email: "ada@example.com",
+    });
     let release = () => {};
     waitForRequest.mockImplementation(
       () =>
@@ -65,31 +88,41 @@ describe("Home", () => {
 
     expect(waitForRequest).toHaveBeenCalledOnce();
     expect(getRecent).not.toHaveBeenCalled();
-    expect(readSession).not.toHaveBeenCalled();
+    expect(getSessionUser).not.toHaveBeenCalled();
 
     release();
     const ui = (await pending) as HomeElement;
 
+    expect(getSessionUser).toHaveBeenCalledOnce();
     expect(getRecent).toHaveBeenCalledOnce();
-    expect(readSession).toHaveBeenCalledOnce();
     expect(ui.type).toBe(Dashboard);
     expect(ui.props.initial).toBeNull();
-    expect(ui.props.email).toBeNull();
+    expect(ui.props.user).toEqual({
+      name: "Ada",
+      email: "ada@example.com",
+    });
   });
 
-  it("passes the snapshot and session email to Dashboard", async () => {
+  it("passes the snapshot and user to Dashboard", async () => {
     getRecent.mockResolvedValue(SNAPSHOT);
-    readSession.mockResolvedValue({ email: "ada@example.com" });
+    getSessionUser.mockResolvedValue({
+      name: "Ada",
+      email: "ada@example.com",
+    });
 
     const ui = (await Home()) as HomeElement;
 
     expect(ui.type).toBe(Dashboard);
     expect(ui.props.initial).toBe(SNAPSHOT);
-    expect(ui.props.email).toBe("ada@example.com");
+    expect(ui.props.user).toEqual({
+      name: "Ada",
+      email: "ada@example.com",
+    });
   });
 
-  it("passes email=null when getSession returns null", async () => {
-    const ui = (await Home()) as unknown as HomeElement;
-    expect(ui.props.email).toBeNull();
+  it("redirects to login when there is no session", async () => {
+    getSessionUser.mockResolvedValue(null);
+    await expect(Home()).rejects.toThrow("REDIRECT:/login");
+    expect(getRecent).not.toHaveBeenCalled();
   });
 });

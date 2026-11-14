@@ -1,12 +1,17 @@
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
 
 import { Dashboard } from "@/components/dashboard/dashboard";
-import { getSession } from "@/services/auth/session";
+import { signOut } from "@/app/login/actions";
+import { getSessionUser } from "@/services/auth/get-session";
 import { getRecentReadings } from "@/services/report/report-service";
 
 export default async function Home() {
   await connection();
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
   const initial = await getRecentReadings();
-  const session = await getSession();
-  return <Dashboard initial={initial} email={session?.email ?? null} />;
+  return (
+    <Dashboard initial={initial} user={user} signOutAction={signOut} />
+  );
 }

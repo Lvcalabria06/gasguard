@@ -1,49 +1,25 @@
-import Link from "next/link";
-
-export function accountMenuView(email: string | null) {
-  if (email === null) {
-    return {
-      state: "guest" as const,
-      loginHref: "/login" as const,
-      loginLabel: "Entrar" as const,
-      signupHref: "/cadastro" as const,
-      signupLabel: "Cadastrar" as const,
-    };
-  }
+export function accountMenuView(user: { name: string; email: string }) {
   return {
-    state: "signed-in" as const,
-    email,
+    name: user.name,
+    email: user.email,
     logoutLabel: "Sair" as const,
-    logoutAction: "/login/sair" as const,
   };
 }
 
-export function AccountMenu({ email }: { email: string | null }) {
-  const view = accountMenuView(email);
-
-  if (view.state === "guest") {
-    return (
-      <nav className="flex items-center justify-end gap-3 text-sm">
-        <Link
-          href={view.loginHref}
-          className="text-muted-foreground underline-offset-4 hover:underline"
-        >
-          {view.loginLabel}
-        </Link>
-        <Link
-          href={view.signupHref}
-          className="font-medium underline-offset-4 hover:underline"
-        >
-          {view.signupLabel}
-        </Link>
-      </nav>
-    );
-  }
+export function AccountMenu({
+  user,
+  signOutAction,
+}: {
+  user: { name: string; email: string };
+  signOutAction: () => Promise<void>;
+}) {
+  const view = accountMenuView(user);
 
   return (
     <nav className="flex items-center justify-end gap-3 text-sm">
+      <span className="truncate font-medium">{view.name}</span>
       <span className="truncate text-muted-foreground">{view.email}</span>
-      <form action={view.logoutAction} method="post">
+      <form action={signOutAction}>
         <button
           type="submit"
           className="font-medium underline-offset-4 hover:underline"

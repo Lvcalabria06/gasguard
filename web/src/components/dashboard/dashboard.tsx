@@ -46,10 +46,12 @@ export function dashboardView(
 
 export function Dashboard({
   initial,
-  email,
+  user,
+  signOutAction,
 }: {
   initial: RecentReadings | null;
-  email: string | null;
+  user: { name: string; email: string };
+  signOutAction: () => Promise<void>;
 }) {
   const { readings, events, connection, secondsSinceLast } =
     useReadings(initial);
@@ -59,7 +61,7 @@ export function Dashboard({
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
       <main className="flex flex-1 flex-col gap-4 px-4 py-6">
-        <AccountMenu email={email} />
+        <AccountMenu user={user} signOutAction={signOutAction} />
         <DashboardHeader
           connection={connection}
           secondsSinceLast={secondsSinceLast}
