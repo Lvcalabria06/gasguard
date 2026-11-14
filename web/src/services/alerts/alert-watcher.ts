@@ -1,6 +1,6 @@
 import "server-only";
 
-import { listUsers } from "@/services/auth/users";
+import { listUserEmails } from "@/services/auth/list-user-emails";
 import { watchReadings } from "@/services/report/report-service";
 import type { Reading, RiskLevel } from "@/types";
 
@@ -69,7 +69,7 @@ export function startAlertWatcher(send: AlertSend = sendAlertEmail): () => void 
           previousLevel: from,
           reading,
           now: Date.now(),
-          users: listUsers(),
+          users: listUserEmails().map((email) => ({ email })),
           lastSent,
           user: gmailUser,
           pass: process.env.GMAIL_APP_PASSWORD || undefined,

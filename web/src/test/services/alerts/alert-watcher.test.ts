@@ -6,11 +6,11 @@ vi.mock("@/services/report/report-service", () => ({
   watchReadings: vi.fn(),
 }));
 
-vi.mock("@/services/auth/users", () => ({
-  listUsers: vi.fn(() => []),
+vi.mock("@/services/auth/list-user-emails", () => ({
+  listUserEmails: vi.fn(() => []),
 }));
 
-import { listUsers } from "@/services/auth/users";
+import { listUserEmails } from "@/services/auth/list-user-emails";
 import { watchReadings } from "@/services/report/report-service";
 import type { Reading, RiskLevel } from "@/types";
 
@@ -209,7 +209,7 @@ describe("startAlertWatcher", () => {
   };
 
   const watch = vi.mocked(watchReadings);
-  const users = vi.mocked(listUsers);
+  const emails = vi.mocked(listUserEmails);
   let handlers: WatchHandlers | undefined;
   const stop = vi.fn();
 
@@ -220,7 +220,7 @@ describe("startAlertWatcher", () => {
       handlers = next;
       return stop;
     });
-    users.mockReturnValue([{ email: "ada@example.com", passwordHash: "x:y" }]);
+    emails.mockReturnValue(["ada@example.com"]);
   });
 
   it("updates previous before awaiting send so a second CRITICAL in the same tick is silent", async () => {
