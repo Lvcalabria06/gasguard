@@ -8,7 +8,7 @@ import {
   filterView,
   setFilterPeriod,
   toggleFilterLevel,
-} from "./event-filters";
+} from "@/components/dashboard/event-filters";
 
 describe("filterView", () => {
   it("lists every level and period label, with Hoje selected and no level pressed", () => {

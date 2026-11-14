@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getScenario } from "@/lib/scenarios";
 import type { Reading, RiskLevel } from "@/types";
 
-import { riskView } from "./risk-card";
+import { riskView } from "@/components/dashboard/risk-card";
 
 function reading(
   extras: Partial<Pick<Reading, "level" | "scenarioId" | "source">> = {},

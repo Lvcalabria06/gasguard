@@ -8,4 +8,4 @@
 Container/presentation é convenção, não regra: um componente simples pode usar o hook e renderizar no mesmo arquivo.
 
 - Pode importar: `hooks/`, `lib/`, `types/`, `components/ui`.
-- Não pode: `services/`, `node:*`. Regra de negócio nunca fica em componente: vai para `lib/`, com teste.
+- Não pode: `services/`, `node:*`. Regra de negócio nunca fica em componente: vai para `lib/`, com teste em `test/lib/`.

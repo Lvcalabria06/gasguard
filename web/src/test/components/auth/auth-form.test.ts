@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { authFormView } from "./auth-form";
+import { authFormView } from "@/components/auth/auth-form";
 
 describe("authFormView", () => {
   it("labels the login form in pt-BR", () => {

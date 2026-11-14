@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { sendAlertEmail } from "./send-alert";
+import { sendAlertEmail } from "@/services/alerts/send-alert";
 
 describe("sendAlertEmail", () => {
   it("POSTs JSON to api.resend.com/emails and returns true on 2xx", async () => {

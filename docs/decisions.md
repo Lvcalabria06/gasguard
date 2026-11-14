@@ -102,3 +102,9 @@ O `hardware/` e o `web/` são projetos independentes. Nenhum importa, lê ou exe
 - Qualquer mudança no formato do CSV segue o [contrato](csv-contract.md) e é feita em todos os produtores ao mesmo tempo.
 
 **Por quê:** cada lado pode ser desenvolvido, testado e apresentado sozinho, e o dashboard pode trocar a fonte de dados (por exemplo, MQTT no futuro) sem tocar no firmware.
+
+## D20. Testes do web ficam em `src/test/`
+
+Os `*.test.ts` do Vitest ficam em `web/src/test/`, espelhando o caminho do arquivo sob teste (`lib/risk-level.ts` → `test/lib/risk-level.test.ts`). Imports do código sob teste usam o alias `@/`.
+**Por quê:** separa produção de teste sem mudar as camadas; a árvore de `app/`, `components/`, `hooks/`, `services/` e `lib/` fica só com o que roda.
+**Alternativa descartada:** manter o teste ao lado do arquivo (`x.ts` → `x.test.ts`), que misturava as pastas de produção.

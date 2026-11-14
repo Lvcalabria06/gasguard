@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ConnectionStatus } from "@/types";
 
-import { headerView } from "./dashboard-header";
+import { headerView } from "@/components/dashboard/dashboard-header";
 
 describe("headerView", () => {
   it("maps each connection status to the pt-BR label and dot color", () => {

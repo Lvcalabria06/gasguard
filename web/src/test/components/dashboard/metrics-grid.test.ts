@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { formatGasDelta, formatTemperature } from "@/lib/format";
 import type { Reading } from "@/types";
 
-import { metricsView } from "./metrics-grid";
+import { metricsView } from "@/components/dashboard/metrics-grid";
 
 function reading(extras: Partial<Reading> = {}): Reading {
   return {

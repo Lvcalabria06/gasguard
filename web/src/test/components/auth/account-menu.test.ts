@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { accountMenuView } from "./account-menu";
+import { accountMenuView } from "@/components/auth/account-menu";
 
 describe("accountMenuView", () => {
   it("points guests to login and signup", () => {

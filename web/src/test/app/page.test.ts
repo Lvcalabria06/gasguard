@@ -24,7 +24,7 @@ import { getRecentReadings } from "@/services/report/report-service";
 import type { RecentReadings } from "@/types";
 import { connection } from "next/server";
 
-import Home from "./page";
+import Home from "@/app/page";
 
 type HomeElement = {
   type: unknown;

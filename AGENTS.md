@@ -36,13 +36,14 @@ docs/                  decisões, contrato, roadmap, specs e planos do Superpowe
 - **CSV em português:** no web, **somente** `web/src/services/report/` conhece as colunas em português (`nivel`, `fogao`...). O resto usa os tipos de `web/src/types/`.
 - **O nível de risco vem do firmware.** O web não recalcula regras de risco.
 - **Sem dados há mais de 5 s:** mostre "sem dados", nunca "normal".
-- **Camadas do web** (tabela completa em [`docs/architecture.md`](docs/architecture.md#camadas-do-web)). Não crie pastas de primeiro nível novas em `web/src`:
+- **Camadas do web** (tabela completa em [`docs/architecture.md`](docs/architecture.md#camadas-do-web)). Não crie pastas de primeiro nível novas em `web/src` (exceto `test/`):
   - `app/`: rotas finas. `page.tsx` (Server Component) faz a carga inicial; `api/stream` é o SSE. Não existe `/api/report`.
   - `components/`: interface (`ui/` é do shadcn, `dashboard/` é a tela).
   - `hooks/`: estado no navegador. Na reconexão do SSE, `router.refresh()`.
   - `services/`: lógica do servidor; todo arquivo começa com `import "server-only";`.
-  - `lib/`: funções puras com `*.test.ts` ao lado. **Regra de negócio fica aqui**, nunca em componente ou hook.
+  - `lib/`: funções puras. **Regra de negócio fica aqui**, nunca em componente ou hook.
   - `types/`: **só tipos**, nada executável.
+  - `test/`: testes Vitest (`*.test.ts`), espelhando o caminho do arquivo sob teste (`lib/x.ts` → `test/lib/x.test.ts`).
   - Importe só "para baixo": `app` → `components` → `hooks` → `services` → `lib` → `types` (`components` e `hooks` nunca importam `services`).
   - Arquivos em `kebab-case`, imports por `@/`.
 - **Firmware:**

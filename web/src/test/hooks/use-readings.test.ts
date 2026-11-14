@@ -11,7 +11,7 @@ import {
   initReadings,
   readingsReducer,
   useReadings,
-} from "./use-readings";
+} from "@/hooks/use-readings";
 
 const NOW = new Date(2026, 10, 12, 14, 32, 20).getTime();
 

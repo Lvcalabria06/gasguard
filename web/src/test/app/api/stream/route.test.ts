@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Reading } from "@/types";
 
-import { formatSse } from "./sse-format";
+import { formatSse } from "@/app/api/stream/sse-format";
 
 vi.mock("@/services/report/report-service", () => ({
   watchReadings: vi.fn(),
 }));
 
 import { watchReadings } from "@/services/report/report-service";
-import { GET } from "./route";
+import { GET } from "@/app/api/stream/route";
 
 const READING: Reading = {
   timestamp: "2026-11-10T14:32:08",

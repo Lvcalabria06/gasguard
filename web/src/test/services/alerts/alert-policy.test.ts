@@ -11,7 +11,7 @@ import {
   alertText,
   canSendAlert,
   enteredCritical,
-} from "./alert-policy";
+} from "@/services/alerts/alert-policy";
 
 function reading(
   level: RiskLevel,

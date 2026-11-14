@@ -1,6 +1,6 @@
 # lib
 
-**Funções puras** compartilhadas entre servidor e cliente. Cada arquivo tem um `*.test.ts` ao lado. Sem React, sem `node:*`, sem `Date.now()`.
+**Funções puras** compartilhadas entre servidor e cliente. Cada arquivo tem um `*.test.ts` em `src/test/lib/`. Sem React, sem `node:*`, sem `Date.now()`.
 
 | Arquivo | Exporta |
 |---|---|

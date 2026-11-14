@@ -30,7 +30,7 @@ import {
   setSession,
   signSession,
   verifySession,
-} from "./session";
+} from "@/services/auth/session";
 
 const SECRET = "test-auth-secret";
 

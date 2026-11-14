@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Reading } from "@/types";
 
-import { chartView } from "./readings-chart";
+import { chartView } from "@/components/dashboard/readings-chart";
 
 function reading(extras: Partial<Reading> = {}): Reading {
   return {

@@ -33,8 +33,8 @@ import { createUser } from "@/services/auth/users";
 import { getSession } from "@/services/auth/session";
 import { redirect } from "next/navigation";
 
-import { login } from "./page";
-import LoginPage from "./page";
+import { login } from "@/app/login/page";
+import LoginPage from "@/app/login/page";
 
 const originalUsers = process.env.AUTH_USERS_PATH;
 const originalSecret = process.env.AUTH_SECRET;

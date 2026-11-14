@@ -6,13 +6,13 @@ vi.mock("next/navigation", () => ({
 
 import type { EventFilterState, Reading, RiskLevel } from "@/types";
 
-import { DEFAULT_EVENT_FILTER } from "./event-filters";
+import { DEFAULT_EVENT_FILTER } from "@/components/dashboard/event-filters";
 import {
   ACADEMIC_FOOTER,
   dashboardView,
   latestReading,
   liveReading,
-} from "./dashboard";
+} from "@/components/dashboard/dashboard";
 
 function reading(
   timestamp: string,

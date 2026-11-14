@@ -41,20 +41,21 @@ O `web/src` é organizado **por camada** ([D15](decisions.md#d15-o-web-é-organi
 | `components/` | **Interface.** `ui/` é o shadcn (gerado); `dashboard/` são as partes da tela | `hooks`, `lib`, `types`, `components/ui` | `services`, `node:*` |
 | `hooks/` | **Estado no navegador** (`"use client"`): SSE, buffer de leituras, status da conexão | `lib`, `types` | `services`, `node:*` |
 | `services/` | **Lógica do servidor.** Todo arquivo começa com `import "server-only";`. `report/` é a **única** parte que conhece o CSV em português | `lib`, `types`, `node:*` | React, `hooks`, `components` |
-| `lib/` | **Funções puras** compartilhadas (servidor e navegador), cada uma com `*.test.ts` ao lado: cenários, `detectEvents()`, filtros, formatação, `cn()` | `types` | React, `node:*`, `services` |
+| `lib/` | **Funções puras** compartilhadas (servidor e navegador): cenários, `detectEvents()`, filtros, formatação, `cn()` | `types` | React, `node:*`, `services` |
 | `types/` | **Só tipos** em inglês (`Reading`, `RiskLevel`, `ReportEvent`). Nada executável | — | funções, constantes, imports de outras pastas |
+| `test/` | **Testes Vitest** (`*.test.ts`). Espelha o caminho do arquivo sob teste; não faz parte da cadeia de import das camadas | qualquer camada via `@/` | código de produção |
 
 Regras que decorrem da tabela:
 
-- **Regra de negócio nunca fica em componente nem em hook.** Ela vai para `lib/`, como função pura com teste.
+- **Regra de negócio nunca fica em componente nem em hook.** Ela vai para `lib/`, como função pura com teste em `test/lib/`.
 - **Constante ou função não entra em `types/`** ([D16](decisions.md#d16-types-só-tem-tipos-o-executável-vai-para-lib)). Exemplo: o tipo `RiskLevel` fica em `types/risk-level.ts`; a lista `RISK_LEVELS` e `isRiskLevel()` ficam em `lib/risk-level.ts`.
 - **Container/presentation é convenção, não regra.** Um componente simples pode usar o hook e renderizar no mesmo arquivo.
-- **Crescimento:** e-mail e login (Etapa 5) entram como `services/alerts/` e `services/auth/`, com telas em `app/` e componentes em `components/`. Nenhuma pasta nova de primeiro nível.
+- **Crescimento:** e-mail e login (Etapa 5) entram como `services/alerts/` e `services/auth/`, com telas em `app/` e componentes em `components/`. Nenhuma pasta nova de primeiro nível além de `test/` ([D20](decisions.md#d20-testes-do-web-ficam-em-srctest)).
 
 ### Convenções
 
 - Arquivos em `kebab-case` (`risk-card.tsx`, `use-readings.ts`, `report-service.ts`); componentes exportados em `PascalCase`, funções e hooks em `camelCase`.
-- Testes ao lado do arquivo testado: `x.ts` → `x.test.ts` (Vitest).
+- Testes em `src/test/`, espelhando o caminho: `lib/x.ts` → `test/lib/x.test.ts` (Vitest).
 - Imports pelo alias `@/` (`@/lib/risk-level`, `@/types`).
 - Código em inglês; textos da tela em pt-BR.
 
@@ -164,16 +165,18 @@ gasguard/
         │       ├── parse-csv-line.ts    # linha pt → Reading
         │       ├── tail-report.ts       # acompanha o arquivo por offset
         │       └── report-service.ts    # getRecentReadings(), watchReadings()
-        ├── lib/                 # FUNÇÕES PURAS (com teste ao lado)
+        ├── lib/                 # FUNÇÕES PURAS
         │   ├── utils.ts         # cn() do shadcn
         │   ├── risk-level.ts    # RISK_LEVELS, isRiskLevel()
         │   ├── scenarios.ts     # (Etapa 3) dicionário id → título/orientação
         │   ├── events.ts        # (Etapa 3) detectEvents()
         │   ├── filters.ts       # (Etapa 3) filtro por nível e período
         │   └── format.ts        # (Etapa 4) "há 12 s", valores
-        └── types/               # SÓ TIPOS
-            ├── reading.ts
-            ├── risk-level.ts
-            ├── report-event.ts
-            └── index.ts
+        ├── types/               # SÓ TIPOS
+        │   ├── reading.ts
+        │   ├── risk-level.ts
+        │   ├── report-event.ts
+        │   └── index.ts
+        └── test/                # TESTES (espelha app/, components/, hooks/, lib/, services/)
+            └── …
 ```

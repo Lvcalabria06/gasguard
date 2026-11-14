@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Reading } from "@/types";
 
-import { formatSse } from "./sse-format";
+import { formatSse } from "@/app/api/stream/sse-format";
 
 const READING: Reading = {
   timestamp: "2026-11-10T14:32:08",

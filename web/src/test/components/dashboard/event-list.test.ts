@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getScenario } from "@/lib/scenarios";
 import type { EventFilterState, ReportEvent, RiskLevel } from "@/types";
 
-import { eventListView } from "./event-list";
+import { eventListView } from "@/components/dashboard/event-list";
 
 function event(
   timestamp: string,

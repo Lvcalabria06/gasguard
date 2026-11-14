@@ -12,7 +12,7 @@ import {
   getUsersPath,
   listUsers,
   parseEmail,
-} from "./users";
+} from "@/services/auth/users";
 
 const originalPath = process.env.AUTH_USERS_PATH;
 

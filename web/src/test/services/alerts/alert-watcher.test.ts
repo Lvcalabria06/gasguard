@@ -18,7 +18,7 @@ import {
   handleCriticalReading,
   shouldStartAlertWatcher,
   startAlertWatcher,
-} from "./alert-watcher";
+} from "@/services/alerts/alert-watcher";
 
 function reading(
   level: RiskLevel,

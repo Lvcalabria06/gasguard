@@ -7,7 +7,7 @@ vi.mock("next/font/google", () => ({
 
 vi.mock("./globals.css", () => ({}));
 
-import RootLayout, { SYSTEM_THEME_SCRIPT } from "./layout";
+import RootLayout, { SYSTEM_THEME_SCRIPT } from "@/app/layout";
 
 type LayoutElement = {
   type: unknown;

@@ -28,7 +28,7 @@ vi.mock("next/navigation", () => ({
 import { SESSION_COOKIE, setSession } from "@/services/auth/session";
 import { redirect } from "next/navigation";
 
-import { POST } from "./route";
+import { POST } from "@/app/login/sair/route";
 
 beforeEach(async () => {
   store.clear();

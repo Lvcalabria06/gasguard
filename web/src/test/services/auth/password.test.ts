@@ -6,7 +6,7 @@ import {
   hashPassword,
   passwordError,
   verifyPassword,
-} from "./password";
+} from "@/services/auth/password";
 
 describe("passwordError", () => {
   it("rejects passwords shorter than 8 characters", () => {
