@@ -1,12 +1,13 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
   AuthForm,
   type AuthFormState,
 } from "@/components/auth/auth-form";
-import { verifyPassword } from "@/services/auth/password";
-import { getSession, setSession } from "@/services/auth/session";
-import { findUser, parseEmail } from "@/services/auth/users";
+import { parseEmail } from "@/lib/parse-email";
+import { auth } from "@/services/auth/auth";
+import { getSessionUser } from "@/services/auth/get-session";
 
 const FOOTER =
   "Protótipo acadêmico — Sistemas Embarcados, CESAR School 2026. Não é um detector certificado.";
@@ -22,20 +23,20 @@ export async function login(
     return { error: "Informe um e-mail válido." };
   }
   const password = String(formData.get("password") ?? "");
-  if (!process.env.AUTH_SECRET) {
-    return { error: "Configuração incompleta. Defina AUTH_SECRET." };
-  }
-  const user = findUser(email);
-  if (user === null || !verifyPassword(password, user.passwordHash)) {
+  try {
+    await auth.api.signInEmail({
+      body: { email, password },
+      headers: await headers(),
+    });
+  } catch {
     return { error: "E-mail ou senha inválidos." };
   }
-  await setSession(email);
   redirect("/");
 }
 
 export default async function LoginPage() {
-  const session = await getSession();
-  if (session) redirect("/");
+  const user = await getSessionUser();
+  if (user) redirect("/");
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">

@@ -8,6 +8,7 @@ describe("authFormView", () => {
       title: "Entrar",
       submitLabel: "Entrar",
       showConfirm: false,
+      showName: false,
       switchHref: "/cadastro",
       switchLabel: "Não tem conta? Cadastre-se",
     });
@@ -18,6 +19,7 @@ describe("authFormView", () => {
       title: "Criar conta",
       submitLabel: "Cadastrar",
       showConfirm: true,
+      showName: true,
       switchHref: "/login",
       switchLabel: "Já tem conta? Entrar",
     });

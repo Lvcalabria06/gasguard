@@ -1,12 +1,13 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
   AuthForm,
   type AuthFormState,
 } from "@/components/auth/auth-form";
-import { passwordError } from "@/services/auth/password";
-import { getSession, setSession } from "@/services/auth/session";
-import { createUser, parseEmail } from "@/services/auth/users";
+import { parseEmail } from "@/lib/parse-email";
+import { auth } from "@/services/auth/auth";
+import { getSessionUser } from "@/services/auth/get-session";
 
 const FOOTER =
   "Protótipo acadêmico — Sistemas Embarcados, CESAR School 2026. Não é um detector certificado.";
@@ -17,30 +18,36 @@ export async function signup(
 ): Promise<AuthFormState> {
   "use server";
 
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) {
+    return { error: "Informe o seu nome." };
+  }
   const email = parseEmail(String(formData.get("email") ?? ""));
   if (email === null) {
     return { error: "Informe um e-mail válido." };
   }
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
-  const passwordProblem = passwordError(password);
-  if (passwordProblem) return { error: passwordProblem };
+  if (password.length < 8) {
+    return { error: "A senha deve ter pelo menos 8 caracteres." };
+  }
   if (password !== confirm) {
     return { error: "As senhas não coincidem." };
   }
-  if (!process.env.AUTH_SECRET) {
-    return { error: "Configuração incompleta. Defina AUTH_SECRET." };
-  }
-  if (createUser(email, password) === "duplicate") {
+  try {
+    await auth.api.signUpEmail({
+      body: { email, password, name },
+      headers: await headers(),
+    });
+  } catch {
     return { error: "E-mail já cadastrado." };
   }
-  await setSession(email);
   redirect("/");
 }
 
 export default async function SignupPage() {
-  const session = await getSession();
-  if (session) redirect("/");
+  const user = await getSessionUser();
+  if (user) redirect("/");
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">

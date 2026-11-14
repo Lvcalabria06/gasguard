@@ -1,26 +1,22 @@
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const store = new Map<string, string>();
+const { signInEmail, getSessionUser } = vi.hoisted(() => ({
+  signInEmail: vi.fn(),
+  getSessionUser: vi.fn(),
+}));
+
+vi.mock("@/services/auth/auth", () => ({
+  auth: { api: { signInEmail } },
+}));
+
+vi.mock("@/services/auth/get-session", () => ({
+  getSessionUser,
+}));
 
 vi.mock("next/headers", () => ({
-  cookies: async () => ({
-    get: (name: string) => {
-      const value = store.get(name);
-      return value === undefined ? undefined : { name, value };
-    },
-    set: (name: string, value: string) => {
-      store.set(name, value);
-    },
-    delete: (name: string) => {
-      store.delete(name);
-    },
-  }),
+  headers: vi.fn(async () => new Headers()),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -29,17 +25,10 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-import { createUser } from "@/services/auth/users";
-import { getSession } from "@/services/auth/session";
 import { redirect } from "next/navigation";
 
 import { login } from "@/app/login/page";
 import LoginPage from "@/app/login/page";
-
-const originalUsers = process.env.AUTH_USERS_PATH;
-const originalSecret = process.env.AUTH_SECRET;
-
-let tmpDir: string;
 
 function form(email: string, password: string): FormData {
   const data = new FormData();
@@ -49,19 +38,9 @@ function form(email: string, password: string): FormData {
 }
 
 beforeEach(() => {
-  tmpDir = mkdtempSync(join(tmpdir(), "gasguard-login-"));
-  process.env.AUTH_USERS_PATH = join(tmpDir, "users.json");
-  process.env.AUTH_SECRET = "test-auth-secret";
-  store.clear();
+  signInEmail.mockReset();
+  getSessionUser.mockReset();
   vi.mocked(redirect).mockClear();
-});
-
-afterEach(() => {
-  rmSync(tmpDir, { recursive: true, force: true });
-  if (originalUsers === undefined) delete process.env.AUTH_USERS_PATH;
-  else process.env.AUTH_USERS_PATH = originalUsers;
-  if (originalSecret === undefined) delete process.env.AUTH_SECRET;
-  else process.env.AUTH_SECRET = originalSecret;
 });
 
 describe("login", () => {
@@ -69,49 +48,35 @@ describe("login", () => {
     await expect(login({ error: null }, form("sem-arroba", "password1"))).resolves.toEqual({
       error: "Informe um e-mail válido.",
     });
+    expect(signInEmail).not.toHaveBeenCalled();
   });
 
-  it("hides whether the email exists", async () => {
-    createUser("ada@example.com", "password1");
-
+  it("returns an error when the API fails", async () => {
+    signInEmail.mockRejectedValue(new Error("invalid"));
     await expect(
       login({ error: null }, form("ada@example.com", "wrong-password")),
     ).resolves.toEqual({ error: "E-mail ou senha inválidos." });
-    await expect(
-      login({ error: null }, form("nobody@example.com", "password1")),
-    ).resolves.toEqual({ error: "E-mail ou senha inválidos." });
   });
 
-  it("returns a config error when AUTH_SECRET is missing", async () => {
-    delete process.env.AUTH_SECRET;
-    createUser("ada@example.com", "password1");
-
-    await expect(
-      login({ error: null }, form("ada@example.com", "password1")),
-    ).resolves.toEqual({
-      error: "Configuração incompleta. Defina AUTH_SECRET.",
-    });
-    expect(store.size).toBe(0);
-  });
-
-  it("sets the session and redirects home", async () => {
-    createUser("ada@example.com", "password1");
-
+  it("calls signInEmail and redirects home", async () => {
+    signInEmail.mockResolvedValue({});
     await expect(
       login({ error: null }, form("Ada@Example.COM", "password1")),
     ).rejects.toThrow("REDIRECT:/");
+    expect(signInEmail).toHaveBeenCalledWith({
+      body: { email: "ada@example.com", password: "password1" },
+      headers: expect.any(Headers),
+    });
     expect(redirect).toHaveBeenCalledWith("/");
-    expect(await getSession()).toEqual({ email: "ada@example.com" });
   });
 });
 
 describe("LoginPage", () => {
   it("redirects home when a session already exists", async () => {
-    createUser("ada@example.com", "password1");
-    await login({ error: null }, form("ada@example.com", "password1")).catch(
-      () => {},
-    );
-
+    getSessionUser.mockResolvedValue({
+      name: "Ada",
+      email: "ada@example.com",
+    });
     await expect(LoginPage()).rejects.toThrow("REDIRECT:/");
   });
 });

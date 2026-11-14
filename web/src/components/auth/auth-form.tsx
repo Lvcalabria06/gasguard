@@ -18,6 +18,7 @@ export function authFormView(mode: AuthFormMode) {
       title: "Entrar" as const,
       submitLabel: "Entrar" as const,
       showConfirm: false,
+      showName: false,
       switchHref: "/cadastro" as const,
       switchLabel: "Não tem conta? Cadastre-se" as const,
     };
@@ -26,6 +27,7 @@ export function authFormView(mode: AuthFormMode) {
     title: "Criar conta" as const,
     submitLabel: "Cadastrar" as const,
     showConfirm: true,
+    showName: true,
     switchHref: "/login" as const,
     switchLabel: "Já tem conta? Entrar" as const,
   };
@@ -48,6 +50,19 @@ export function AuthForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {view.showName ? (
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Nome</span>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            required
+            className={INPUT_CLASS}
+          />
+        </label>
+      ) : null}
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-medium">E-mail</span>
         <input
