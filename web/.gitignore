@@ -41,5 +41,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local prototype data (W5 users.json)
+# local prototype data (auth.sqlite, etc.)
 /.data/

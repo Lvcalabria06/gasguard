@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Lets phones on the same Wi-Fi use `next dev` (docs/decisions.md, D8).
+  serverExternalPackages: ["better-sqlite3"],
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"],
   turbopack: {
     rules: {

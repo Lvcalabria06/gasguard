@@ -7,10 +7,13 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "auth:migrate": "npx @better-auth/cli@latest migrate --config src/services/auth/auth.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "better-auth": "^1.7.24",
+    "better-sqlite3": "^13.2.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "lucide-react": "^1.71.0",
@@ -24,6 +27,7 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^24.19.2",
     "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
