@@ -135,8 +135,8 @@ Os alarmes funcionam **por comparação com a base**, e não com um número fixo
 | Chama | o tempo todo | Considera "chama presente" por 1,5 s após a última detecção, porque a chama tremula |
 | Botão do fogão | o tempo todo | Cada aperto liga/desliga, com proteção contra trepidação |
 | Movimento (PIR) | o tempo todo | Conta há quanto tempo não há movimento com o fogão ligado |
-| MQ-2 e MQ-6 | a cada 2 s | Média de 20 leituras; compara com a base |
-| Temperatura | a cada 2 s | Descarta leituras impossíveis (< 5 °C ou > 60 °C) |
+| MQ-2 e MQ-6 | a cada 1 s | Média de 20 leituras; compara com a base (a base se ajusta a cada 2 s) |
+| Temperatura | a cada 1 s | Descarta leituras impossíveis (< 5 °C ou > 60 °C) |
 
 ### 3. Decisões que deixam o sistema mais confiável
 
@@ -176,6 +176,10 @@ Quando o cenário muda, o Monitor Serial mostra um bloco em destaque:
 ```
 
 Ao voltar ao normal, ele informa quanto tempo durou a situação. A cada 2 segundos também aparece uma linha de status, e eventos isolados aparecem com o prefixo `[evento]`.
+
+### Gravação do `daily-report.csv`
+
+A cada 1 s o firmware também imprime uma linha `CSV,...` (formato em [`docs/csv-contract.md`](../docs/csv-contract.md)). Com o Monitor Serial do PlatformIO aberto, o filtro [`monitor/filter_gasguard.py`](monitor/filter_gasguard.py) (ativado no `platformio.ini`) grava essas linhas no `daily-report.csv` da raiz, e o app web mostra tudo ao vivo. Nada muda no uso: é só abrir o Monitor. Não rode o simulador ao mesmo tempo.
 
 ---
 

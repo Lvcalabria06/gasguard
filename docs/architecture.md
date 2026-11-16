@@ -147,7 +147,7 @@ gasguard/
 │   ├── src/main.cpp
 │   ├── include/ lib/ test/      # pastas padrão do PlatformIO
 │   ├── .vscode/extensions.json
-│   └── monitor/filter_gasguard.py   # (Etapa 2) grava o CSV a partir do Serial
+│   └── monitor/filter_gasguard.py   # grava o CSV a partir do Serial (testes em monitor/tests/)
 └── web/                         # projeto Next.js
     ├── AGENTS.md                # gerado pelo create-next-app (regras do Next)
     ├── package.json

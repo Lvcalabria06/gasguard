@@ -17,13 +17,13 @@ Plano: [`2026-11-10-monorepo-foundation.md`](superpowers/plans/2026-11-10-monore
 
 ## Etapa 2: Hardware grava o CSV (time de hardware)
 
-Contrato: [csv-contract.md → Lado do hardware](csv-contract.md#lado-do-hardware-a-implementar-ver-roadmap)
+Contrato: [csv-contract.md → Lado do hardware](csv-contract.md#lado-do-hardware)
 
-- [ ] Ciclo de leitura de gases e temperatura de 2 s para **1 s**.
-- [ ] Imprimir a linha `CSV,...` (16 campos) a cada ciclo.
-- [ ] `hardware/monitor/filter_gasguard.py` com buffer de linhas, validação, rotação diária e append.
-- [ ] `monitor_filters = default, gasguard` no `platformio.ini`.
-- [ ] Testar na placa: o CSV ganha 1 linha por segundo, e o ruído na USB não quebra o arquivo.
+- [x] Ciclo de leitura de gases e temperatura de 2 s para **1 s** (a base adaptativa e a linha de status legível continuam a cada 2 s).
+- [x] Imprimir a linha `CSV,...` (16 campos) a cada ciclo.
+- [x] `hardware/monitor/filter_gasguard.py` com buffer de linhas, validação, rotação diária e append (testes em `hardware/monitor/tests/`).
+- [x] `monitor_filters = default, gasguard` no `platformio.ini`.
+- [ ] Compilar e testar na placa: o CSV ganha 1 linha por segundo, e o ruído na USB não quebra o arquivo. (Sem a placa, o filtro foi testado com uma "placa falsa" que imita a Serial; o firmware ainda não foi compilado.)
 
 ## Etapa 3: Web, pipeline em tempo real
 

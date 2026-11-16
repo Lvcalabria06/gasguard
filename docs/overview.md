@@ -33,7 +33,7 @@ Código: [`hardware/src/main.cpp`](../hardware/src/main.cpp) (C++/Arduino, Platf
 2. **Calibração (10 a 30 s):** mede o **ar limpo** (a base de cada MQ) e a **temperatura ambiente**, em até 15 tentativas de 2 s, parando após 5 leituras de temperatura válidas. O limite de temperatura é a ambiente **+ 2 °C**.
 3. **Monitoramento:**
    - Chama, botão e PIR são lidos o tempo todo.
-   - MQ-2, MQ-6 e DHT11 são lidos **a cada 2 s**. A meta combinada para o CSV é **1 s** (ver [roadmap](roadmap.md)).
+   - MQ-2, MQ-6 e DHT11 são lidos **a cada 1 s**, e cada ciclo imprime uma linha `CSV,...` para o filtro do Monitor Serial gravar o `daily-report.csv`. A base adaptativa e a linha de status legível continuam a cada 2 s.
    - Níveis dos MQ: `0` normal, `1` atenção (≥ 300 acima da base), `2` vazamento (≥ 800 acima da base), com histerese.
    - Base adaptativa: com ar normal, a base acompanha a deriva do sensor.
 4. **Avaliação:** `avaliaCenario()` testa as regras da mais grave para a menos grave. A primeira que bater define o **cenário** (id 0 a 17) e o **nível**. Ver [scenarios.md](scenarios.md).

@@ -66,6 +66,8 @@ float tempAtual = NAN;
 bool tempAlta = false;
 bool erroTemp = false;
 unsigned long ultimaLeitura = 0;
+const unsigned long INTERVALO_LEITURA = 1000;  // ms entre leituras de gás/temperatura (1 linha CSV por ciclo)
+unsigned long ciclosLeitura = 0;
 
 // Chama
 bool chama = false;
@@ -258,6 +260,28 @@ const char* nomeNivel(Nivel n) {
     case FALHA:   return "FALHA";
   }
   return "?";
+}
+
+// Nome do nível no CSV: igual ao do log, exceto ALTO (o log imprime "ALTO RISCO").
+const char* nomeNivelCsv(Nivel n) {
+  return n == ALTO ? "ALTO" : nomeNivel(n);
+}
+
+// Linha lida pelo filtro do Monitor Serial (hardware/monitor/filter_gasguard.py), que grava
+// o daily-report.csv. Formato em docs/csv-contract.md: prefixo CSV + 15 campos. O filtro
+// acrescenta hora e origem. Só imprime estado: não muda nenhuma regra de risco.
+void imprimeLinhaCsv(const Cenario& c) {
+  char temp[12] = "";        // vazio quando a leitura do DHT11 é inválida
+  char tempLimite[12] = "";  // vazio enquanto não há temperatura ambiente
+  if (!erroTemp && !isnan(tempAtual)) snprintf(temp, sizeof(temp), "%.1f", tempAtual);
+  if (!isnan(limite)) snprintf(tempLimite, sizeof(tempLimite), "%.1f", limite);
+  Serial.printf("CSV,%s,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d,%lu\n",
+                nomeNivelCsv(c.nivel), c.id,
+                valorMQ6, baseMQ6, nivelMQ6,
+                valorMQ2, baseMQ2, nivelMQ2,
+                chama ? 1 : 0, temp, tempLimite, tempAlta ? 1 : 0,
+                movimento ? 1 : 0, fogaoLigado ? 1 : 0,
+                tempoSemMovimento / 1000);
 }
 
 String resumoLeituras() {
@@ -458,9 +482,12 @@ void loop() {
     fogaoSemChama = false;
   }
 
-  // ---- Gás e temperatura (a cada 2 s) ----
-  if (millis() - ultimaLeitura >= 2000) {
+  // ---- Gás e temperatura (a cada 1 s, para a linha CSV) ----
+  if (millis() - ultimaLeitura >= INTERVALO_LEITURA) {
     ultimaLeitura = millis();
+    // A base adaptativa e a linha de status legível continuam a cada 2 s (um ciclo sim,
+    // outro não): assim a base acompanha a deriva na mesma velocidade de antes.
+    bool cicloDeDoisSegundos = (ciclosLeitura++ % 2) == 0;
 
     valorMQ2 = lerMQ(pinoMQ2);
     int n2 = calculaNivel(valorMQ2 - baseMQ2, nivelMQ2, MQ2_ATENCAO, MQ2_VAZAMENTO);
@@ -476,12 +503,12 @@ void loop() {
       nivelMQ6 = n6;
     }
 
-    // Base adaptativa (só em ar normal)
-    if (nivelMQ2 == 0) {
+    // Base adaptativa (só em ar normal, a cada 2 s)
+    if (cicloDeDoisSegundos && nivelMQ2 == 0) {
       if (valorMQ2 < baseMQ2) baseMQ2 = (baseMQ2 * 9 + valorMQ2) / 10;
       else if (valorMQ2 - baseMQ2 < MQ2_ATENCAO / 3) baseMQ2 = (baseMQ2 * 99 + valorMQ2) / 100;
     }
-    if (nivelMQ6 == 0) {
+    if (cicloDeDoisSegundos && nivelMQ6 == 0) {
       if (valorMQ6 < baseMQ6) baseMQ6 = (baseMQ6 * 9 + valorMQ6) / 10;
       else if (valorMQ6 - baseMQ6 < MQ6_ATENCAO / 3) baseMQ6 = (baseMQ6 * 99 + valorMQ6) / 100;
     }
@@ -501,9 +528,10 @@ void loop() {
       else if (tempAlta && t < limite - 0.5) tempAlta = false;
     }
 
-    // Linha de status
+    // Linha de status (legível, a cada 2 s) e linha CSV (a cada 1 s)
     Cenario c = avaliaCenario();
-    Serial.printf("[%s] %s\n", nomeNivel(c.nivel), resumoLeituras().c_str());
+    if (cicloDeDoisSegundos) Serial.printf("[%s] %s\n", nomeNivel(c.nivel), resumoLeituras().c_str());
+    imprimeLinhaCsv(c);
   }
 
   // ---- Avalia o cenário e anuncia quando ele muda ----

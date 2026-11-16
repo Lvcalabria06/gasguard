@@ -47,7 +47,7 @@ npm run dev
 
 Abra `http://localhost:3000`, ou `http://<IP-do-computador>:3000` no celular, na mesma rede Wi-Fi.
 
-**Com a placa:** abra `gasguard.code-workspace` no VS Code, faça o Upload do firmware e abra o Monitor Serial do PlatformIO. A gravação do CSV pela placa é a próxima etapa: veja [`docs/roadmap.md`](docs/roadmap.md).
+**Com a placa:** abra `gasguard.code-workspace` no VS Code, faça o Upload do firmware e abra o Monitor Serial do PlatformIO. Com o Monitor aberto, o filtro `hardware/monitor/filter_gasguard.py` grava o `daily-report.csv` e o app mostra os dados da placa (sem o selo SIMULAÇÃO). Não rode o simulador ao mesmo tempo.
 
 ## Documentação
 
