@@ -55,7 +55,7 @@ A ordem é: status e risco → métricas → gráfico de 10 min → eventos. Os 
 
 ## D11. Stack do web
 
-Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS, shadcn/ui, Recharts, lucide-react, Vitest e npm. Sem banco, sem login e sem estado global.
+Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS, shadcn/ui, Recharts, lucide-react, Vitest e npm. Sem banco, sem login e sem estado global. (login/banco locais: ver D21).
 
 ## D12. O código do web e do mock é em inglês, com camadas separadas
 
@@ -67,9 +67,10 @@ Identificadores em inglês (`useReadings`, `Reading`, `RiskLevel`). Os textos da
 `refactor/monorepo-structure` só move o firmware, documenta o contrato do CSV, cria o esqueleto do web e implementa o mock. A linha `CSV,...` no firmware, a mudança para 1 s e o filtro ficam no [roadmap](roadmap.md).
 **Por quê:** refactor e mudança de comportamento em PRs separados, e o firmware precisa ser testado na placa real.
 
-## D14. E-mail de alerta é uma etapa futura
+## D14. E-mail de alerta via Gmail SMTP
 
-O envio de e-mail **gratuito** (Gmail SMTP com senha de app, ou o plano grátis do Resend) para alertas críticos depende de uma tela de login/cadastro para saber o e-mail do usuário. O objetivo é demonstrar na apresentação: "aconteceu um caso crítico e o usuário recebeu um e-mail".
+O envio de e-mail **gratuito** para alertas críticos usa Gmail SMTP com senha de app (`GMAIL_USER` + `GMAIL_APP_PASSWORD`, via `nodemailer`). Depende de login/cadastro para saber o e-mail do usuário. O objetivo é demonstrar na apresentação: "aconteceu um caso crítico e o usuário recebeu um e-mail".
+**Alternativa descartada:** Resend (API HTTP, plano grátis) — troca pedida para evitar conta/domínio de provedor externo; Gmail basta para a demo.
 
 ## D15. O web é organizado por camada, em 6 pastas
 
@@ -102,3 +103,16 @@ O `hardware/` e o `web/` são projetos independentes. Nenhum importa, lê ou exe
 - Qualquer mudança no formato do CSV segue o [contrato](csv-contract.md) e é feita em todos os produtores ao mesmo tempo.
 
 **Por quê:** cada lado pode ser desenvolvido, testado e apresentado sozinho, e o dashboard pode trocar a fonte de dados (por exemplo, MQTT no futuro) sem tocar no firmware.
+
+## D20. Testes do web ficam em `src/test/`
+
+Os `*.test.ts` do Vitest ficam em `web/src/test/`, espelhando o caminho do arquivo sob teste (`lib/risk-level.ts` → `test/lib/risk-level.test.ts`). Imports do código sob teste usam o alias `@/`.
+**Por quê:** separa produção de teste sem mudar as camadas; a árvore de `app/`, `components/`, `hooks/`, `services/` e `lib/` fica só com o que roda.
+**Alternativa descartada:** manter o teste ao lado do arquivo (`x.ts` → `x.test.ts`), que misturava as pastas de produção.
+
+## D21. Auth com Better Auth + SQLite local; app protegido
+
+Login/cadastro usam Better Auth com `better-sqlite3` em `web/.data/auth.sqlite`. Não há Postgres nem Docker no protótipo. O dashboard e o SSE exigem sessão; `/login`, `/cadastro` e `/api/auth/*` são públicos. O cadastro pede nome; a navbar mostra nome e e-mail. Alertas leem e-mails do SQLite.
+**Substitui** o trecho de D11 (“Sem banco, sem login…”) e a auth caseira JSON+HMAC da Etapa 5.
+**Por quê:** menos código nosso, DX igual a um arquivo local, foco na lógica de produto.
+**Alternativa descartada:** Postgres no Docker (processo extra); JSON caseiro (sessão/hash manuais); Better Auth sem proteger o app.
