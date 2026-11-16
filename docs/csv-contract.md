@@ -46,6 +46,7 @@ Com isso, a virada da meia-noite, um arquivo apagado no meio da execução ou um
 - Se a linha 1 não começar com `data,`, ou a linha 2 for diferente do cabeçalho, o arquivo é **inválido**: o web trata como "sem dados" e registra o erro no log do servidor.
 - Uma linha de dados com número de campos diferente de 17, ou com valor fora do tipo esperado, é **ignorada** e registrada no log, sem derrubar a leitura.
 - Um trecho final sem `\n` é uma linha ainda incompleta: espere o próximo ciclo.
+- Por tolerância, um `\r` no fim da linha (arquivo gravado com `\r\n`) é ignorado. Mesmo assim, quem grava deve usar **LF**.
 - Se o tamanho do arquivo **diminuir**, ele foi recriado: volte a ler do início e avise os clientes para limparem o estado.
 
 ## Colunas
@@ -115,3 +116,4 @@ CSV,<nivel>,<cenario>,<mq6>,<mq6_base>,<mq6_nivel>,<mq2>,<mq2_base>,<mq2_nivel>,
 - **Todo o texto continua indo para o terminal**, então o Monitor funciona como antes.
 - O caminho do CSV é calculado a partir do próprio arquivo do filtro: `Path(__file__).resolve().parents[2] / "daily-report.csv"`.
 - Erro de escrita no arquivo não derruba o monitor: o filtro imprime um aviso e segue.
+- **No Windows**, abra o arquivo com `open(caminho, "a", encoding="utf-8", newline="")`. Sem `newline=""`, o Python troca cada `\n` por `\r\n`.

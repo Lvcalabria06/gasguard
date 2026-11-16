@@ -1,10 +1,14 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdtempSync, readFileSync as fsReadFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs")>();
+  return { ...actual, readFileSync: vi.fn(actual.readFileSync) };
+});
 
 import { getRecentReadings, getReportPath, watchReadings } from "@/services/report/report-service";
 import type { Reading } from "@/types";
@@ -132,8 +136,27 @@ describe("getRecentReadings", () => {
       date: DATE,
       readings: [],
       events: [],
+      lastReadingAgeMs: null,
     });
     expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("accepts a CRLF file (Windows line endings)", async () => {
+    writeFileSync(reportPath, reportFile(DATE, [CONTRACT_LINE]).replaceAll("\n", "\r\n"));
+    const result = await getRecentReadings();
+    expect(result?.readings).toEqual([CONTRACT_READING]);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("measures the age of the last reading with the server clock", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 10, 14, 32, 11));
+    try {
+      writeFileSync(reportPath, reportFile(DATE, [CONTRACT_LINE]));
+      expect((await getRecentReadings())?.lastReadingAgeMs).toBe(3000);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("translates the csv-contract example and detects the FAILURE event", async () => {
@@ -294,6 +317,69 @@ describe("watchReadings", () => {
     expect(onReading.mock.calls[0][0].timestamp).toBe("2026-11-11T00:00:02");
 
     stop();
+  });
+
+  it("reads only the appended bytes, not the whole file, on each tick", () => {
+    writeFileSync(reportPath, reportFile(DATE, [csvLine("14:32:08")]));
+    const onReading = vi.fn();
+    stop = watchReadings({ onReading, onReset: vi.fn() });
+    const fullReadsAfterSeed = vi.mocked(fsReadFileSync).mock.calls.length;
+    expect(fullReadsAfterSeed).toBeGreaterThan(0); // the spy does see the seed read
+
+    appendFileSync(reportPath, csvLine("14:32:09") + "\n");
+    vi.advanceTimersByTime(500);
+    appendFileSync(reportPath, csvLine("14:32:10") + "\n");
+    vi.advanceTimersByTime(500);
+
+    expect(onReading.mock.calls.map(([item]) => item.timestamp)).toEqual([
+      "2026-11-10T14:32:09",
+      "2026-11-10T14:32:10",
+    ]);
+    expect(vi.mocked(fsReadFileSync).mock.calls.length).toBe(fullReadsAfterSeed);
+  });
+
+  it("waits for a half-written line and emits it once complete", () => {
+    writeFileSync(reportPath, reportFile(DATE, [csvLine("14:32:08")]));
+    const onReading = vi.fn();
+    stop = watchReadings({ onReading, onReset: vi.fn() });
+
+    const line = csvLine("14:32:09");
+    appendFileSync(reportPath, line.slice(0, 20));
+    vi.advanceTimersByTime(500);
+    expect(onReading).not.toHaveBeenCalled();
+
+    appendFileSync(reportPath, line.slice(20) + "\n");
+    vi.advanceTimersByTime(500);
+    expect(onReading).toHaveBeenCalledTimes(1);
+    expect(onReading.mock.calls[0][0].timestamp).toBe("2026-11-10T14:32:09");
+  });
+
+  it("calls onReset when the date line changes even if the file did not shrink", () => {
+    writeFileSync(reportPath, reportFile(DATE, [csvLine("14:32:08")]));
+    const onReading = vi.fn();
+    const onReset = vi.fn();
+    stop = watchReadings({ onReading, onReset });
+
+    writeFileSync(
+      reportPath,
+      reportFile("2026-11-11", [csvLine("00:00:01"), csvLine("00:00:02"), csvLine("00:00:03")]),
+    );
+    vi.advanceTimersByTime(500);
+
+    expect(onReset).toHaveBeenCalledTimes(1);
+    expect(onReading).not.toHaveBeenCalled();
+  });
+
+  it("emits appended CRLF lines without the carriage return", () => {
+    writeFileSync(reportPath, reportFile(DATE, [csvLine("14:32:08")]).replaceAll("\n", "\r\n"));
+    const onReading = vi.fn();
+    stop = watchReadings({ onReading, onReset: vi.fn() });
+
+    appendFileSync(reportPath, csvLine("14:32:09") + "\r\n");
+    vi.advanceTimersByTime(500);
+
+    expect(onReading).toHaveBeenCalledTimes(1);
+    expect(console.error).not.toHaveBeenCalled();
   });
 
   it("skips an invalid appended line and keeps watching", () => {

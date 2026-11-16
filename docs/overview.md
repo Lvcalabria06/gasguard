@@ -30,7 +30,7 @@ Detalhes de ligação, alimentação e testes físicos: [`hardware/README.md`](.
 Código: [`hardware/src/main.cpp`](../hardware/src/main.cpp) (C++/Arduino, PlatformIO, `esp32dev`, Serial a 115200).
 
 1. **Aquecimento (60 s):** os sensores MQ esquentam.
-2. **Calibração (~10 s):** mede o **ar limpo** (a base de cada MQ) e a **temperatura ambiente**. O limite de temperatura é a ambiente **+ 2 °C**.
+2. **Calibração (10 a 30 s):** mede o **ar limpo** (a base de cada MQ) e a **temperatura ambiente**, em até 15 tentativas de 2 s, parando após 5 leituras de temperatura válidas. O limite de temperatura é a ambiente **+ 2 °C**.
 3. **Monitoramento:**
    - Chama, botão e PIR são lidos o tempo todo.
    - MQ-2, MQ-6 e DHT11 são lidos **a cada 2 s**. A meta combinada para o CSV é **1 s** (ver [roadmap](roadmap.md)).

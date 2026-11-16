@@ -212,6 +212,36 @@ describe("readingsReducer", () => {
     expect(state.streamOpen).toBe(true);
   });
 
+  it("measures staleness from arrival, not from the PC timestamp (phone clock may differ)", () => {
+    let state = initReadings(snapshot([]), NOW);
+    state = readingsReducer(state, { type: "open", now: NOW });
+    // Phone clock 30 s ahead of the PC: the reading is fresh even though its timestamp looks old.
+    const phoneNow = NOW + 30_000;
+    state = readingsReducer(state, {
+      type: "reading",
+      reading: reading("2026-11-12T14:32:20"),
+      now: phoneNow,
+    });
+    expect(state.connection).toBe("live");
+    expect(state.secondsSinceLast).toBe(0);
+
+    state = readingsReducer(state, { type: "tick", now: phoneNow + 4_000 });
+    expect(state.connection).toBe("live");
+    state = readingsReducer(state, { type: "tick", now: phoneNow + 5_000 });
+    expect(state.connection).toBe("no_data");
+  });
+
+  it("uses the server-measured age of the initial snapshot", () => {
+    const initial = {
+      ...snapshot([reading("2026-11-12T14:00:00")]),
+      lastReadingAgeMs: 2_000,
+    };
+    let state = initReadings(initial, NOW);
+    state = readingsReducer(state, { type: "open", now: NOW });
+    expect(state.secondsSinceLast).toBe(2);
+    expect(state.connection).toBe("live");
+  });
+
   it("hydrates from the server snapshot and keeps a newer local reading", () => {
     let state = initReadings(snapshot([reading("2026-11-12T14:32:19")]), NOW);
     state = readingsReducer(state, { type: "open", now: NOW });
@@ -240,6 +270,7 @@ class FakeStream {
   onopen: ((event: Event) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
   closed = false;
+  readyState = 1;
   private listeners = new Map<string, Set<(event: MessageEvent) => void>>();
 
   addEventListener(type: string, listener: (event: MessageEvent) => void) {
@@ -329,6 +360,19 @@ describe("bindReadingsStream", () => {
     expect(dispatch).toHaveBeenCalledWith({ type: "error", now: NOW });
 
     source.onopen?.(new Event("open"));
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("refreshes when the browser gives up on the stream (e.g. 401 after the session expired)", () => {
+    const source = new FakeStream();
+    const refresh = vi.fn();
+    bindReadingsStream({ source, dispatch: vi.fn(), refresh, now: () => NOW });
+
+    source.onerror?.(new Event("error"));
+    expect(refresh).not.toHaveBeenCalled();
+
+    source.readyState = 2;
+    source.onerror?.(new Event("error"));
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 

@@ -7,13 +7,12 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "lint": "eslint",
-    "test": "vitest run",
-    "auth:migrate": "npx @better-auth/cli@latest migrate --config src/services/auth/auth.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "better-auth": "^1.7.24",
-    "better-sqlite3": "^13.2.0",
+    "better-sqlite3": "^12.11.1",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "lucide-react": "^1.71.0",

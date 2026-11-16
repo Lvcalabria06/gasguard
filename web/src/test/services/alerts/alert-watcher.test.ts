@@ -246,6 +246,17 @@ describe("startAlertWatcher", () => {
     expect(send).toHaveBeenCalledOnce();
   });
 
+  it("only reads the user e-mails when the level enters CRITICAL", () => {
+    emails.mockClear();
+    startAlertWatcher(send);
+    handlers?.onReading(reading("NORMAL"));
+    handlers?.onReading(reading("ALERT"));
+    expect(emails).not.toHaveBeenCalled();
+
+    handlers?.onReading(reading("CRITICAL"));
+    expect(emails).toHaveBeenCalledOnce();
+  });
+
   it("treats onReset as previous=null so the next CRITICAL notifies again", async () => {
     vi.stubEnv("GMAIL_USER", "gasguard@gmail.com");
     vi.stubEnv("GMAIL_APP_PASSWORD", "app-password");

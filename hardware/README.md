@@ -120,10 +120,10 @@ Os dois resistores de baixo, em série, somam 20 kΩ. A tensão que chega à ESP
 
 O código fica em [`src/main.cpp`](src/main.cpp).
 
-### 1. Inicialização (cerca de 70 segundos)
+### 1. Inicialização (de 70 a 90 segundos)
 
 1. **Aquecimento (60 s)** — LED RGB **piscando azul devagar**. Os sensores MQ têm um aquecedor interno e precisam esquentar para dar leituras estáveis. O PIR estabiliza ao mesmo tempo.
-2. **Calibração (~10 s)** — LED **piscando vermelho**. O sistema mede o **ar limpo** (base de cada MQ) e a **temperatura ambiente**.
+2. **Calibração (10 a 30 s)** — LED **piscando vermelho**. O sistema mede o **ar limpo** (base de cada MQ) e a **temperatura ambiente**.
 3. **Sistema ativo.**
 
 Os alarmes funcionam **por comparação com a base**, e não com um número fixo. Isso torna o sistema independente do ambiente e da calibração de fábrica de cada sensor.
@@ -287,10 +287,9 @@ Os limites dos MQ são **experimentais**, calibrados na maquete. Eles não corre
 
 ## Próximas etapas
 
-- [ ] **Registro em CSV** das leituras em tempo real.
-- [ ] **Back-end (API)** que lê os dados, avalia as regras e envia **e-mail/SMS** personalizado ao usuário.
-- [ ] **App em formato de celular** mostrando as métricas em tempo real.
-- [ ] **Simulador** de cenários para demonstração sem gás nem fogo.
+- [ ] **Registro em CSV** das leituras em tempo real (linha `CSV,...` no firmware + filtro do Monitor Serial).
+- [x] **App web** mobile-first com as métricas em tempo real, login e **e-mail** nos casos críticos (em [`web/`](../web/)).
+- [x] **Simulador** de cenários para demonstração sem gás nem fogo ([`mock-daily-report.js`](../mock-daily-report.js)).
 - [ ] Envio de telemetria por **Wi-Fi + MQTT**.
 - [ ] Firmware organizado em tarefas **FreeRTOS**.
 
