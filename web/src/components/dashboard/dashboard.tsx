@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Info } from "lucide-react";
 
 import { AccountMenu } from "@/components/auth/account-menu";
 import { useReadings } from "@/hooks/use-readings";
@@ -59,23 +60,44 @@ export function Dashboard({
   const view = dashboardView(readings, filter);
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
-      <main className="flex flex-1 flex-col gap-4 px-4 py-6">
-        <AccountMenu user={user} signOutAction={signOutAction} />
-        <DashboardHeader
-          connection={connection}
-          secondsSinceLast={secondsSinceLast}
-        />
-        <RiskCard reading={view.latest} connection={connection} />
-        <MetricsGrid reading={liveReading(view.latest, connection)} />
-        <ReadingsChart readings={view.readings} />
-        <div className="space-y-3">
-          <EventFilters value={view.filter} onChange={setFilter} />
-          <EventList events={events} filter={view.filter} />
+    <div className="relative isolate flex min-h-dvh flex-col">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(60%_100%_at_50%_0%,color-mix(in_oklch,var(--primary)_12%,transparent),transparent)]"
+      />
+
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl backdrop-saturate-150">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <DashboardHeader
+            connection={connection}
+            secondsSinceLast={secondsSinceLast}
+          />
+          <AccountMenu user={user} signOutAction={signOutAction} />
+        </div>
+      </header>
+
+      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-4 px-4 py-5 sm:px-6 sm:py-6 lg:grid-cols-12 lg:gap-6 lg:py-8">
+        <div className="flex flex-col gap-4 lg:col-span-5 lg:gap-6">
+          <RiskCard reading={view.latest} connection={connection} />
+          <MetricsGrid reading={liveReading(view.latest, connection)} />
+        </div>
+        <div className="flex flex-col gap-4 lg:col-span-7 lg:gap-6">
+          <ReadingsChart
+            readings={view.readings}
+            stale={connection === "no_data"}
+          />
+          <section className="panel space-y-4 p-5">
+            <EventFilters value={view.filter} onChange={setFilter} />
+            <EventList events={events} filter={view.filter} />
+          </section>
         </div>
       </main>
-      <footer className="px-4 pb-6 text-xs text-muted-foreground">
-        {view.footer}
+
+      <footer className="mx-auto w-full max-w-6xl px-4 pt-2 pb-8 sm:px-6">
+        <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+          <Info aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+          <span>{view.footer}</span>
+        </p>
       </footer>
     </div>
   );

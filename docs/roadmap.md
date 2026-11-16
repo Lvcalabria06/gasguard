@@ -27,22 +27,23 @@ Contrato: [csv-contract.md → Lado do hardware](csv-contract.md#lado-do-hardwar
 
 ## Etapa 3: Web, pipeline em tempo real
 
-- [ ] `src/services/report/`: parser do CSV (pt → `Reading`), validação e tail por offset, com detecção de recriação; `getRecentReadings()` e `watchReadings()`.
-- [ ] `app/page.tsx` dinâmico fazendo a carga inicial, e `GET /api/stream` (SSE com `ping` a cada 15 s).
-- [ ] `useReadings()`: EventSource, buffer sem duplicatas por `hora`, `router.refresh()` na reconexão, status da conexão e "sem dados" após 5 s.
-- [ ] `src/lib/`: dicionário de cenários, `detectEvents()` (mudança de nível) e filtros, com testes.
+- [x] `src/services/report/`: parser do CSV (pt → `Reading`), validação e tail por offset, com detecção de recriação; `getRecentReadings()` e `watchReadings()`.
+- [x] `app/page.tsx` dinâmico fazendo a carga inicial, e `GET /api/stream` (SSE com `ping` a cada 15 s).
+- [x] `useReadings()`: EventSource, buffer sem duplicatas por `hora`, `router.refresh()` na reconexão, status da conexão e "sem dados" após 5 s.
+- [x] `src/lib/`: dicionário de cenários, `detectEvents()` (mudança de nível) e filtros, com testes.
 
 ## Etapa 4: Web, interface
 
-- [ ] Tela única mobile-first: topo, cartão de risco, métricas, gráfico e eventos com filtros.
-- [ ] Modo claro e escuro, animações de pulso e destaque de mudança.
+- [x] Tela única mobile-first: topo, cartão de risco, métricas, gráfico e eventos com filtros.
+- [x] Modo claro e escuro e animação de pulso.
+- [x] Destaque rápido quando o estado de uma métrica muda (nível do gás, chama, fogão, movimento).
 - [ ] Teste no celular pela rede Wi-Fi.
 
 ## Etapa 5: Alertas por e-mail
 
 - [x] Login/cadastro com Better Auth + SQLite local (`web/.data/auth.sqlite`); app protegido; navbar com nome e e-mail.
 - [x] Envio gratuito (Gmail SMTP com senha de app) ao entrar em CRITICO, com intervalo anti-repetição.
-- [ ] Selo `[SIMULAÇÃO]` no assunto quando a origem for o mock.
+- [x] Selo `[SIMULAÇÃO]` no assunto quando a origem for o mock.
 
 ## Futuro (requisitos da disciplina)
 

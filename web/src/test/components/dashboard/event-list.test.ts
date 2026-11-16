@@ -64,6 +64,8 @@ describe("eventListView", () => {
     expect(rows[0]).toEqual({
       id: "2026-11-12T14:32:09",
       time: "14:32:09",
+      fromLevel: "NORMAL",
+      toLevel: "ALERT",
       fromLabel: "Normal",
       toLabel: "Alerta",
       title: getScenario(99).title,
@@ -73,6 +75,7 @@ describe("eventListView", () => {
     expect(rows[1]).toMatchObject({
       id: "2026-11-12T14:32:08",
       time: "14:32:08",
+      fromLevel: null,
       fromLabel: "—",
       toLabel: "Alerta",
       title: getScenario(7).title,

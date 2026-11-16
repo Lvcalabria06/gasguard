@@ -122,7 +122,7 @@ describe("metricsView", () => {
     });
   });
 
-  it("uses the seconds-without-motion phrase only while the stove is on", () => {
+  it("shows the seconds without motion only while the stove is on", () => {
     expect(
       item(
         metricsView(
@@ -133,8 +133,8 @@ describe("metricsView", () => {
           }),
         ),
         "motion",
-      ).value,
-    ).toBe("sem movimento há 42 s");
+      ),
+    ).toMatchObject({ value: "Sem movimento", hint: "há 42 s", tone: "idle" });
 
     expect(
       item(
@@ -147,7 +147,7 @@ describe("metricsView", () => {
         ),
         "motion",
       ).value,
-    ).toBe("sem movimento há 0 s");
+    ).toBe("Com movimento");
 
     expect(
       item(
@@ -174,5 +174,35 @@ describe("metricsView", () => {
         "motion",
       ).value,
     ).toBe("Sem movimento");
+  });
+
+  it("colors tiles from the firmware flags and gas levels", () => {
+    const view = metricsView(
+      reading({
+        mq6: { value: 1120, base: 290, level: 2 },
+        mq2: { value: 1250, base: 900, level: 1 },
+        flame: true,
+        temperature: { celsius: 29.1, limit: 28.4, high: true },
+        stoveOn: true,
+        motion: true,
+      }),
+    );
+
+    expect(item(view, "mq6")).toMatchObject({ tone: "danger", gasLevel: 2 });
+    expect(item(view, "mq2")).toMatchObject({ tone: "warn", gasLevel: 1 });
+    // Flame and motion are not judged here (risk rules belong to the firmware).
+    expect(item(view, "flame").tone).toBe("active");
+    expect(item(view, "temperature").tone).toBe("warn");
+    expect(item(view, "stove").tone).toBe("active");
+    expect(item(view, "motion").gasLevel).toBeNull();
+  });
+
+  it("only changes the highlight key on a state change, not on noisy values", () => {
+    const a = metricsView(reading({ mq6: { value: 300, base: 290, level: 0 } }));
+    const b = metricsView(reading({ mq6: { value: 342, base: 290, level: 0 } }));
+    const c = metricsView(reading({ mq6: { value: 700, base: 290, level: 1 } }));
+
+    expect(item(a, "mq6").flashKey).toBe(item(b, "mq6").flashKey);
+    expect(item(b, "mq6").flashKey).not.toBe(item(c, "mq6").flashKey);
   });
 });

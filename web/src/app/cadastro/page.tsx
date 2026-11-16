@@ -5,13 +5,12 @@ import {
   AuthForm,
   type AuthFormState,
 } from "@/components/auth/auth-form";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { parseEmail } from "@/lib/parse-email";
 import { signupErrorMessage } from "@/lib/signup-error";
 import { auth } from "@/services/auth/auth";
 import { getSessionUser } from "@/services/auth/get-session";
 
-const FOOTER =
-  "Protótipo acadêmico — Sistemas Embarcados, CESAR School 2026. Não é um detector certificado.";
 
 export async function signup(
   _prev: AuthFormState,
@@ -52,15 +51,11 @@ export default async function SignupPage() {
   if (user) redirect("/");
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
-      <main className="flex flex-1 flex-col justify-center gap-6 px-4 py-10">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">GasGuard</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Criar conta</h1>
-        </div>
-        <AuthForm mode="signup" action={signup} />
-      </main>
-      <footer className="px-4 pb-6 text-xs text-muted-foreground">{FOOTER}</footer>
-    </div>
+    <AuthShell
+      title="Criar conta"
+      description="Cadastre-se para ver o painel e receber os alertas por e-mail."
+    >
+      <AuthForm mode="signup" action={signup} />
+    </AuthShell>
   );
 }

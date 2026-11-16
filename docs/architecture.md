@@ -82,14 +82,13 @@ a conexão caiu e voltou, ou o arquivo foi recriado (virou o dia)
   4. linhas com hora ≤ à da última recebida são descartadas (sem duplicatas)
 ```
 
-- `GET /api/stream`: uma conexão SSE por cliente. O servidor verifica o arquivo a cada **500 ms**, lê **só os bytes novos** (guarda o offset) e envia um evento por linha nova. Um `ping` a cada **15 s** mantém a conexão viva. Se o arquivo encolher (recriado), o servidor avisa o cliente, que chama `router.refresh()`.
+- `GET /api/stream`: uma conexão SSE por cliente. O servidor verifica o tamanho do arquivo a cada **500 ms** e lê **só os bytes novos** a partir do offset guardado (o arquivo inteiro só é lido ao abrir a conexão e depois de uma recriação). Se o arquivo encolher ou a data da linha 1 mudar (recriado), o servidor avisa o cliente, que chama `router.refresh()`. Se o navegador desistir da conexão (ex.: `401` com a sessão expirada), o cliente também chama `router.refresh()`, e a página manda para `/login`.
+- **Eventos SSE:** `reading` (o `data` é um `Reading` em JSON, uma linha do CSV), `reset` (arquivo recriado; o cliente limpa o estado e recarrega) e `ping` (a cada **15 s**, sem dados, só para manter a conexão).
 - **Não existe `/api/report`.** A carga inicial é o Server Component chamando o service direto. O `page.tsx` precisa ser dinâmico (`await connection()`), senão o Next gera a página no build com o CSV daquele momento.
 - **Eventos:** o servidor calcula os eventos do dia com `detectEvents()` (de `lib/`) lendo o arquivo inteiro; o navegador usa a mesma função para as linhas ao vivo. Mandar as ~86 mil leituras do dia seria pesado; os eventos são poucos.
 - **`hora` identifica a linha** porque há no máximo 1 linha por segundo ([D18](decisions.md#d18-no-máximo-1-linha-por-segundo-no-csv)).
 - **Perda no pior caso:** uma linha no intervalo entre a carga e a abertura do SSE. No gráfico é um ponto em 600; nos eventos, a mudança de nível aparece 1 s depois. Recarregar a página sempre traz o estado completo, porque o CSV no disco está completo.
-- **Sem linha nova há mais de 5 s:** o estado vira **sem dados** (cinza). O app nunca mostra "normal" com dado velho.
-
-> Os nomes exatos dos eventos SSE e o formato das mensagens serão definidos no plano da etapa "web: pipeline em tempo real" ([roadmap](roadmap.md)).
+- **Sem linha nova há mais de 5 s:** o estado vira **sem dados** (cinza). O app nunca mostra "normal" com dado velho. Os 5 s contam desde a **chegada** da última linha no navegador, e a carga inicial traz a idade medida pelo servidor (`lastReadingAgeMs`). Assim o relógio do celular, que pode estar adiantado ou atrasado em relação ao PC, não interfere.
 
 ## A tela (única, mobile-first, clean)
 
@@ -99,6 +98,8 @@ a conexão caiu e voltou, ou o arquivo foi recriado (virou o dia)
 4. **Gráfico dos últimos 10 min:** MQ-6, MQ-2 e temperatura.
 5. **Eventos do dia:** mudanças de nível, **o mais novo no topo**. A lista rola sozinha, sem rolar a página. Filtros: chips de nível (vários ao mesmo tempo) e período (`Última hora` · `Últimas 6 h` · `Hoje`, com `Hoje` como padrão), aplicados no cliente.
 6. **Rodapé:** "Protótipo acadêmico — Sistemas Embarcados, CESAR School 2026. Não é um detector certificado."
+
+No desktop (≥ 1024 px) a tela vira duas colunas: risco e métricas à esquerda, gráfico e eventos à direita. O gráfico alterna entre **Gases** e **Temperatura** (escalas diferentes). As cores e os rótulos de cada nível ficam em `components/dashboard/level-theme.ts`. As métricas só ganham cor de alerta com o que o firmware sinaliza (`mq*_nivel`, `temp_alta`); chama e movimento ficam neutros, porque julgar esses sinais seria uma regra de risco.
 
 Visual clean e moderno, com modo claro e escuro do sistema. **Evento** = mudança de nível entre duas leituras consecutivas (linhas com o mesmo nível não geram evento).
 
@@ -156,19 +157,20 @@ gasguard/
     ├── .env.example             # DAILY_REPORT_PATH, BETTER_AUTH_*, Gmail
     ├── .data/auth.sqlite        # GERADO (ignorado no git)
     └── src/
-        ├── proxy.ts             # (Etapa 5) redirect otimista sem cookie de sessão
+        ├── proxy.ts             # redirect otimista sem cookie de sessão
+        ├── instrumentation.ts   # no startup: migrations do SQLite de auth + watcher de alertas
         ├── app/                 # ROTAS
         │   ├── layout.tsx
         │   ├── page.tsx         # dashboard (exige sessão) + carga inicial
-        │   ├── login/           # (Etapa 5) entrar / sair
-        │   ├── cadastro/        # (Etapa 5) criar conta (nome + e-mail + senha)
+        │   ├── login/           # entrar / sair
+        │   ├── cadastro/        # criar conta (nome + e-mail + senha)
         │   ├── globals.css
         │   └── api/
         │       ├── stream/route.ts      # GET /api/stream (SSE; exige sessão)
-        │       └── auth/[...all]/       # (Etapa 5) Better Auth
+        │       └── auth/[...all]/       # Better Auth
         ├── components/          # INTERFACE
         │   ├── ui/              # shadcn (gerado pelo CLI)
-        │   ├── auth/            # (Etapa 5) formulário e menu (nome + e-mail)
+        │   ├── auth/            # formulário e menu (nome + e-mail)
         │   └── dashboard/       # risk-card, metrics-grid, readings-chart, event-list, event-filters
         ├── hooks/               # ESTADO NO NAVEGADOR
         │   └── use-readings.ts
@@ -177,11 +179,11 @@ gasguard/
         │   │   ├── parse-csv-line.ts
         │   │   ├── tail-report.ts
         │   │   └── report-service.ts
-        │   ├── auth/            # (Etapa 5) Better Auth + sessão + e-mails
-        │   └── alerts/          # (Etapa 5) watcher Gmail SMTP
+        │   ├── auth/            # Better Auth + sessão + e-mails
+        │   └── alerts/          # watcher Gmail SMTP
         ├── lib/                 # FUNÇÕES PURAS
         │   ├── utils.ts         # cn() do shadcn
-        │   ├── auth-proxy.ts    # (Etapa 5) decisão de redirect (testável)
+        │   ├── auth-proxy.ts    # decisão de redirect (testável)
         │   ├── risk-level.ts    # RISK_LEVELS, isRiskLevel()
         │   ├── scenarios.ts
         │   ├── events.ts
