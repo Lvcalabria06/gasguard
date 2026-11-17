@@ -30,10 +30,10 @@ Detalhes de ligação, alimentação e testes físicos: [`hardware/README.md`](.
 Código: [`hardware/src/main.cpp`](../hardware/src/main.cpp) (C++/Arduino, PlatformIO, `esp32dev`, Serial a 115200).
 
 1. **Aquecimento (60 s):** os sensores MQ esquentam.
-2. **Calibração (~10 s):** mede o **ar limpo** (a base de cada MQ) e a **temperatura ambiente**. O limite de temperatura é a ambiente **+ 2 °C**.
+2. **Calibração (10 a 30 s):** mede o **ar limpo** (a base de cada MQ) e a **temperatura ambiente**, em até 15 tentativas de 2 s, parando após 5 leituras de temperatura válidas. O limite de temperatura é a ambiente **+ 2 °C**.
 3. **Monitoramento:**
    - Chama, botão e PIR são lidos o tempo todo.
-   - MQ-2, MQ-6 e DHT11 são lidos **a cada 2 s**. A meta combinada para o CSV é **1 s** (ver [roadmap](roadmap.md)).
+   - MQ-2, MQ-6 e DHT11 são lidos **a cada 1 s**, e cada ciclo imprime uma linha `CSV,...` para o filtro do Monitor Serial gravar o `daily-report.csv`. A base adaptativa e a linha de status legível continuam a cada 2 s.
    - Níveis dos MQ: `0` normal, `1` atenção (≥ 300 acima da base), `2` vazamento (≥ 800 acima da base), com histerese.
    - Base adaptativa: com ar normal, a base acompanha a deriva do sensor.
 4. **Avaliação:** `avaliaCenario()` testa as regras da mais grave para a menos grave. A primeira que bater define o **cenário** (id 0 a 17) e o **nível**. Ver [scenarios.md](scenarios.md).
@@ -56,4 +56,5 @@ Código: [`hardware/src/main.cpp`](../hardware/src/main.cpp) (C++/Arduino, Platf
 ## Equipe e disciplina
 
 - Disciplina: Sistemas Embarcados, CESAR School, 2026.
+- Equipe: Bernardo Heuer, Lucas Calabria, Joao Pedro, Maria Julia Dantas, Maria Luiza Dantas.
 - O requisito oficial da disciplina inclui **Wi-Fi + MQTT**. Esta fase usa a Serial USB, e o MQTT é uma etapa futura que só troca a **entrada** dos dados (ver [roadmap](roadmap.md)).

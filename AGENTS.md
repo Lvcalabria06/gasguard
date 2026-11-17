@@ -53,6 +53,7 @@ docs/                  decisões, contrato, roadmap, specs e planos do Superpowe
 - **Workflow:** os planos ficam em `docs/superpowers/plans/` e as specs em `docs/superpowers/specs/` (plugin Superpowers). Uma etapa do roadmap corresponde a um plano e a uma branch.
 - **Testes antes de declarar pronto:**
   - mock: `node --test mock-daily-report.test.js` na raiz;
+  - filtro do Monitor Serial: `python -m unittest discover -s hardware/monitor/tests` na raiz;
   - web: `npm test`, `npm run lint` e `npm run build` em `web/`.
 
 ## Comandos

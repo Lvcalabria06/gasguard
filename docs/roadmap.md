@@ -17,32 +17,33 @@ Plano: [`2026-11-10-monorepo-foundation.md`](superpowers/plans/2026-11-10-monore
 
 ## Etapa 2: Hardware grava o CSV (time de hardware)
 
-Contrato: [csv-contract.md → Lado do hardware](csv-contract.md#lado-do-hardware-a-implementar-ver-roadmap)
+Contrato: [csv-contract.md → Lado do hardware](csv-contract.md#lado-do-hardware)
 
-- [ ] Ciclo de leitura de gases e temperatura de 2 s para **1 s**.
-- [ ] Imprimir a linha `CSV,...` (16 campos) a cada ciclo.
-- [ ] `hardware/monitor/filter_gasguard.py` com buffer de linhas, validação, rotação diária e append.
-- [ ] `monitor_filters = default, gasguard` no `platformio.ini`.
-- [ ] Testar na placa: o CSV ganha 1 linha por segundo, e o ruído na USB não quebra o arquivo.
+- [x] Ciclo de leitura de gases e temperatura de 2 s para **1 s** (a base adaptativa e a linha de status legível continuam a cada 2 s).
+- [x] Imprimir a linha `CSV,...` (16 campos) a cada ciclo.
+- [x] `hardware/monitor/filter_gasguard.py` com buffer de linhas, validação, rotação diária e append (testes em `hardware/monitor/tests/`).
+- [x] `monitor_filters = default, gasguard` no `platformio.ini`.
+- [ ] Compilar e testar na placa: o CSV ganha 1 linha por segundo, e o ruído na USB não quebra o arquivo. (Sem a placa, o filtro foi testado com uma "placa falsa" que imita a Serial; o firmware ainda não foi compilado.)
 
 ## Etapa 3: Web, pipeline em tempo real
 
-- [ ] `src/services/report/`: parser do CSV (pt → `Reading`), validação e tail por offset, com detecção de recriação; `getRecentReadings()` e `watchReadings()`.
-- [ ] `app/page.tsx` dinâmico fazendo a carga inicial, e `GET /api/stream` (SSE com `ping` a cada 15 s).
-- [ ] `useReadings()`: EventSource, buffer sem duplicatas por `hora`, `router.refresh()` na reconexão, status da conexão e "sem dados" após 5 s.
-- [ ] `src/lib/`: dicionário de cenários, `detectEvents()` (mudança de nível) e filtros, com testes.
+- [x] `src/services/report/`: parser do CSV (pt → `Reading`), validação e tail por offset, com detecção de recriação; `getRecentReadings()` e `watchReadings()`.
+- [x] `app/page.tsx` dinâmico fazendo a carga inicial, e `GET /api/stream` (SSE com `ping` a cada 15 s).
+- [x] `useReadings()`: EventSource, buffer sem duplicatas por `hora`, `router.refresh()` na reconexão, status da conexão e "sem dados" após 5 s.
+- [x] `src/lib/`: dicionário de cenários, `detectEvents()` (mudança de nível) e filtros, com testes.
 
 ## Etapa 4: Web, interface
 
-- [ ] Tela única mobile-first: topo, cartão de risco, métricas, gráfico e eventos com filtros.
-- [ ] Modo claro e escuro, animações de pulso e destaque de mudança.
-- [ ] Teste no celular pela rede Wi-Fi.
+- [x] Tela única mobile-first: topo, cartão de risco, métricas, gráfico e eventos com filtros.
+- [x] Modo claro e escuro e animação de pulso.
+- [x] Destaque rápido quando o estado de uma métrica muda (nível do gás, chama, fogão, movimento).
+- [x] Teste no celular pela rede Wi-Fi.
 
 ## Etapa 5: Alertas por e-mail
 
 - [x] Login/cadastro com Better Auth + SQLite local (`web/.data/auth.sqlite`); app protegido; navbar com nome e e-mail.
 - [x] Envio gratuito (Gmail SMTP com senha de app) ao entrar em CRITICO, com intervalo anti-repetição.
-- [ ] Selo `[SIMULAÇÃO]` no assunto quando a origem for o mock.
+- [x] Selo `[SIMULAÇÃO]` no assunto quando a origem for o mock.
 
 ## Futuro (requisitos da disciplina)
 

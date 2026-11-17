@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { accountMenuView } from "@/components/auth/account-menu";
+import { accountMenuView, initialsOf } from "@/components/auth/account-menu";
 
 describe("accountMenuView", () => {
   it("shows name, email and logout label", () => {
@@ -11,5 +11,14 @@ describe("accountMenuView", () => {
       email: "ada@example.com",
       logoutLabel: "Sair",
     });
+  });
+});
+
+describe("initialsOf", () => {
+  it("uses the first and last initials, uppercase", () => {
+    expect(initialsOf("Ada Lovelace")).toBe("AL");
+    expect(initialsOf("  maria  da silva ")).toBe("MS");
+    expect(initialsOf("Teste")).toBe("T");
+    expect(initialsOf("   ")).toBe("?");
   });
 });

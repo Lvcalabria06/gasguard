@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* next/font exposes Geist as --font-geist-sans (see app/layout.tsx). */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +40,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-surface: var(--surface);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,33 +48,78 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Risk card: a soft breathing halo (ALERT/HIGH) and a red/orange alarm (CRITICAL). */
+  --animate-halo: halo 2.4s ease-in-out infinite;
+  --animate-alarm: alarm 1.6s ease-in-out infinite;
+  /* Live dot and "value changed" highlight. */
+  --animate-beacon: beacon 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-flash: flash 0.9s ease-out;
+
+  @keyframes halo {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--halo) 0%, transparent),
+        0 18px 40px -18px var(--halo);
+    }
+    50% {
+      box-shadow: 0 0 0 6px color-mix(in oklch, var(--halo) 22%, transparent),
+        0 22px 50px -16px var(--halo);
+    }
+  }
+  @keyframes alarm {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes beacon {
+    75%,
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+  @keyframes flash {
+    0% {
+      background-color: color-mix(in oklch, var(--primary) 14%, transparent);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
 }
 
+/* Cool, calm neutrals; color is reserved for risk, so the level always stands out. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.975 0.004 255);
+  --surface: oklch(0.955 0.006 255);
+  --foreground: oklch(0.2 0.02 262);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.2 0.02 262);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --popover-foreground: oklch(0.2 0.02 262);
+  --primary: oklch(0.5 0.17 258);
+  --primary-foreground: oklch(0.985 0.005 255);
+  --secondary: oklch(0.955 0.008 255);
+  --secondary-foreground: oklch(0.26 0.02 262);
+  --muted: oklch(0.955 0.006 255);
+  --muted-foreground: oklch(0.52 0.02 260);
+  --accent: oklch(0.95 0.012 255);
+  --accent-foreground: oklch(0.26 0.02 262);
+  --destructive: oklch(0.577 0.215 27);
+  --border: oklch(0.915 0.008 258);
+  --input: oklch(0.89 0.01 258);
+  --ring: oklch(0.62 0.15 258);
+  --chart-1: oklch(0.6 0.16 245);
+  --chart-2: oklch(0.72 0.16 70);
+  --chart-3: oklch(0.63 0.2 15);
+  --chart-4: oklch(0.6 0.12 180);
+  --chart-5: oklch(0.55 0.02 260);
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -84,29 +131,30 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.155 0.012 262);
+  --surface: oklch(0.19 0.014 262);
+  --foreground: oklch(0.96 0.006 255);
+  --card: oklch(0.2 0.014 262);
+  --card-foreground: oklch(0.96 0.006 255);
+  --popover: oklch(0.22 0.014 262);
+  --popover-foreground: oklch(0.96 0.006 255);
+  --primary: oklch(0.72 0.14 255);
+  --primary-foreground: oklch(0.18 0.02 262);
+  --secondary: oklch(0.25 0.014 262);
+  --secondary-foreground: oklch(0.96 0.006 255);
+  --muted: oklch(0.25 0.014 262);
+  --muted-foreground: oklch(0.7 0.018 258);
+  --accent: oklch(0.27 0.018 262);
+  --accent-foreground: oklch(0.96 0.006 255);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.65 0.13 255);
+  --chart-1: oklch(0.72 0.14 240);
+  --chart-2: oklch(0.8 0.15 75);
+  --chart-3: oklch(0.72 0.18 15);
+  --chart-4: oklch(0.72 0.1 180);
+  --chart-5: oklch(0.7 0.02 260);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -123,8 +171,29 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
   }
   html {
     @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* The base card used across the dashboard. */
+  .panel {
+    @apply rounded-3xl border bg-card text-card-foreground shadow-[0_1px_2px_rgb(15_23_42/0.04),0_8px_24px_-12px_rgb(15_23_42/0.08)] dark:shadow-none;
+  }
+  .eyebrow {
+    @apply text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-muted-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

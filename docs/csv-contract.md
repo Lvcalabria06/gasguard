@@ -46,6 +46,7 @@ Com isso, a virada da meia-noite, um arquivo apagado no meio da execução ou um
 - Se a linha 1 não começar com `data,`, ou a linha 2 for diferente do cabeçalho, o arquivo é **inválido**: o web trata como "sem dados" e registra o erro no log do servidor.
 - Uma linha de dados com número de campos diferente de 17, ou com valor fora do tipo esperado, é **ignorada** e registrada no log, sem derrubar a leitura.
 - Um trecho final sem `\n` é uma linha ainda incompleta: espere o próximo ciclo.
+- Por tolerância, um `\r` no fim da linha (arquivo gravado com `\r\n`) é ignorado. Mesmo assim, quem grava deve usar **LF**.
 - Se o tamanho do arquivo **diminuir**, ele foi recriado: volte a ler do início e avise os clientes para limparem o estado.
 
 ## Colunas
@@ -90,7 +91,7 @@ Só `web/src/services/report/` conhece os nomes da esquerda. O resto do web usa 
 | `fogao` | `stoveOn` |
 | `seg_sem_movimento` | `secondsWithoutMotion` |
 
-## Lado do hardware (a implementar, ver roadmap)
+## Lado do hardware
 
 ### Linha que o firmware imprime
 
@@ -103,7 +104,8 @@ CSV,<nivel>,<cenario>,<mq6>,<mq6_base>,<mq6_nivel>,<mq2>,<mq2_base>,<mq2_nivel>,
 - O prefixo `CSV` mais **15 campos**, no total 16 campos separados por vírgula. O firmware **não** imprime `hora` nem `origem`, porque quem grava acrescenta os dois.
 - `nivel` é impresso como `ALTO`, não como "ALTO RISCO".
 - `temp` vazio quando `erroTemp` for verdadeiro. `temp_limite` vazio quando ainda for `NAN`.
-- **A lógica de risco e os pinos não mudam.** Só entra essa saída a mais.
+- **A lógica de risco e os pinos não mudam.** Só entra essa saída a mais. A base adaptativa dos MQ e a linha de status legível continuam a cada 2 s, como antes.
+- Implementação: `imprimeLinhaCsv()` em `hardware/src/main.cpp`.
 
 ### Filtro do Monitor Serial
 
@@ -115,3 +117,6 @@ CSV,<nivel>,<cenario>,<mq6>,<mq6_base>,<mq6_nivel>,<mq2>,<mq2_base>,<mq2_nivel>,
 - **Todo o texto continua indo para o terminal**, então o Monitor funciona como antes.
 - O caminho do CSV é calculado a partir do próprio arquivo do filtro: `Path(__file__).resolve().parents[2] / "daily-report.csv"`.
 - Erro de escrita no arquivo não derruba o monitor: o filtro imprime um aviso e segue.
+- Duas linhas da placa no mesmo segundo do computador (atraso na USB): fica só a primeira, para respeitar "no máximo 1 linha por segundo".
+- Testes (sem placa nem PlatformIO): `python -m unittest discover -s hardware/monitor/tests` na raiz.
+- **No Windows**, abra o arquivo com `open(caminho, "a", encoding="utf-8", newline="")`. Sem `newline=""`, o Python troca cada `\n` por `\r\n`.

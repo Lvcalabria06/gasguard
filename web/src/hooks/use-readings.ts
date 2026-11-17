@@ -22,6 +22,12 @@ export type ReadingsState = {
   connection: ConnectionStatus;
   secondsSinceLast: number | null;
   streamOpen: boolean;
+  /**
+   * When the last reading reached this browser, in this browser's clock.
+   * Staleness is measured from here, never by comparing `timestamp` (the PC's clock)
+   * with the phone's clock, which may be seconds apart.
+   */
+  lastArrivalAt: number | null;
 };
 
 export type ReadingsAction =
@@ -42,6 +48,8 @@ export type ReadingsSource = {
     listener: (event: MessageEvent) => void,
   ): void;
   close(): void;
+  /** EventSource.readyState: 2 (CLOSED) means the browser gave up reconnecting. */
+  readonly readyState?: number;
   onopen: ((event: Event) => void) | null;
   onerror: ((event: Event) => void) | null;
 };
@@ -57,40 +65,60 @@ function keepLastMinutes(readings: Reading[]): Reading[] {
   });
 }
 
-function ageSeconds(timestamp: string | undefined, now: number): number | null {
-  if (!timestamp) return null;
-  const then = parseLocalIso(timestamp);
-  if (!then) return null;
-  return Math.max(0, Math.floor((now - then.getTime()) / 1000));
+const EVENT_SOURCE_CLOSED = 2;
+
+/** Arrival time of the snapshot's last reading, in the browser's clock. */
+function snapshotArrivalAt(
+  initial: RecentReadings | null,
+  readings: Reading[],
+  now: number,
+): number | null {
+  const last = readings[readings.length - 1];
+  if (!last) return null;
+  if (typeof initial?.lastReadingAgeMs === "number") {
+    return now - initial.lastReadingAgeMs;
+  }
+  // Older payload without the server-measured age: fall back to the timestamp.
+  return parseLocalIso(last.timestamp)?.getTime() ?? null;
 }
 
 function view(
   readings: Reading[],
   events: ReportEvent[],
   streamOpen: boolean,
+  lastArrivalAt: number | null,
   now: number,
 ): ReadingsState {
-  const secondsSinceLast = ageSeconds(
-    readings[readings.length - 1]?.timestamp,
-    now,
-  );
+  const secondsSinceLast =
+    readings.length === 0 || lastArrivalAt === null
+      ? null
+      : Math.max(0, Math.floor((now - lastArrivalAt) / 1000));
   const connection: ConnectionStatus =
     secondsSinceLast === null || secondsSinceLast >= STALE_SECONDS
       ? "no_data"
       : streamOpen
         ? "live"
         : "reconnecting";
-  return { readings, events, connection, secondsSinceLast, streamOpen };
+  return {
+    readings,
+    events,
+    connection,
+    secondsSinceLast,
+    streamOpen,
+    lastArrivalAt,
+  };
 }
 
 export function initReadings(
   initial: RecentReadings | null,
   now: number,
 ): ReadingsState {
+  const readings = keepLastMinutes(initial?.readings ?? []);
   return view(
-    keepLastMinutes(initial?.readings ?? []),
+    readings,
     initial?.events ?? [],
     false,
+    snapshotArrivalAt(initial, readings, now),
     now,
   );
 }
@@ -105,14 +133,27 @@ export function readingsReducer(
         state.readings,
         state.events,
         state.streamOpen,
+        state.lastArrivalAt,
         action.now,
       );
     case "open":
-      return view(state.readings, state.events, true, action.now);
+      return view(
+        state.readings,
+        state.events,
+        true,
+        state.lastArrivalAt,
+        action.now,
+      );
     case "error":
-      return view(state.readings, state.events, false, action.now);
+      return view(
+        state.readings,
+        state.events,
+        false,
+        state.lastArrivalAt,
+        action.now,
+      );
     case "reset":
-      return view([], [], state.streamOpen, action.now);
+      return view([], [], state.streamOpen, null, action.now);
     case "hydrate": {
       const incoming = initReadings(action.initial, action.now);
       const lastReadingAt =
@@ -127,7 +168,13 @@ export function readingsReducer(
         ...incoming.events,
         ...state.events.filter((item) => item.timestamp > lastEventAt),
       ];
-      return view(readings, events, state.streamOpen, action.now);
+      const keptLocal = state.readings.some(
+        (item) => item.timestamp > lastReadingAt,
+      );
+      const lastArrivalAt = keptLocal
+        ? Math.max(state.lastArrivalAt ?? 0, incoming.lastArrivalAt ?? 0)
+        : incoming.lastArrivalAt;
+      return view(readings, events, state.streamOpen, lastArrivalAt, action.now);
     }
     case "reading": {
       const last = state.readings[state.readings.length - 1]?.timestamp;
@@ -136,6 +183,7 @@ export function readingsReducer(
           state.readings,
           state.events,
           state.streamOpen,
+          state.lastArrivalAt,
           action.now,
         );
       }
@@ -148,6 +196,7 @@ export function readingsReducer(
         readings,
         extra.length === 0 ? state.events : [...state.events, ...extra],
         state.streamOpen,
+        action.now,
         action.now,
       );
     }
@@ -203,6 +252,9 @@ export function bindReadingsStream(args: {
   source.onerror = () => {
     seenError = true;
     dispatch({ type: "error", now: now() });
+    // The browser only stops retrying on a non-SSE answer, e.g. 401 after the session expired.
+    // Refreshing re-runs the page on the server, which redirects to /login without a session.
+    if (source.readyState === EVENT_SOURCE_CLOSED) refresh();
   };
 
   return () => {

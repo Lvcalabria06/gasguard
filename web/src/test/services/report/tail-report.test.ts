@@ -19,6 +19,11 @@ function report(dataLines: string[], incomplete = ""): string {
 }
 
 describe("readNewLines", () => {
+  it("strips the carriage return of CRLF lines", () => {
+    const content = report([LINE_A, LINE_B]).replaceAll("\n", "\r\n");
+    expect(readNewLines(content, 0).lines).toEqual([LINE_A, LINE_B]);
+  });
+
   it("skips the date and header lines on a cold start", () => {
     const content = report([LINE_A, LINE_B]);
     const snapshot = readNewLines(content, 0);

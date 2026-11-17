@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GasGuard — app web
 
-## Getting Started
+Dashboard mobile-first que mostra em tempo real as leituras do `daily-report.csv` (gravado pela placa ou pelo simulador). Next.js 16 + TypeScript + Tailwind + shadcn/ui, com login local (Better Auth + SQLite) e e-mail nos casos críticos.
 
-First, run the development server:
+> Protótipo acadêmico — Sistemas Embarcados, CESAR School 2026. **Não é um detector certificado.**
+
+## Como rodar
+
+Pré-requisito: Node ≥ 22.12 (recomendado: 24 LTS).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env   # preencha BETTER_AUTH_SECRET (32+ caracteres); Gmail é opcional
+npm run dev            # http://localhost:3000 e http://<IP-do-PC>:3000 no celular
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sem a placa, rode o simulador na raiz do repositório (`node mock-daily-report.js --scenario tour`). Sem ninguém gravando o CSV, a tela mostra "sem dados".
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+O banco de login (`.data/auth.sqlite`) é criado e migrado sozinho no startup.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O app roda **só local**, no mesmo computador do CSV: não há deploy em nuvem ([D8](../docs/decisions.md#d8-o-web-roda-local-no-mesmo-computador-do-csv)).
 
-## Learn More
+## Verificações
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test        # Vitest
+npm run lint
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+No Windows, se o Vitest falhar com `Cannot read properties of undefined (reading 'config')`, abra o terminal num caminho com a letra do drive maiúscula (`C:\...`, não `c:\...`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Onde está cada coisa
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Camadas, fluxo dos dados e mapa de pastas: [`docs/architecture.md`](../docs/architecture.md). Formato do CSV: [`docs/csv-contract.md`](../docs/csv-contract.md).

@@ -120,10 +120,10 @@ Os dois resistores de baixo, em série, somam 20 kΩ. A tensão que chega à ESP
 
 O código fica em [`src/main.cpp`](src/main.cpp).
 
-### 1. Inicialização (cerca de 70 segundos)
+### 1. Inicialização (de 70 a 90 segundos)
 
 1. **Aquecimento (60 s)** — LED RGB **piscando azul devagar**. Os sensores MQ têm um aquecedor interno e precisam esquentar para dar leituras estáveis. O PIR estabiliza ao mesmo tempo.
-2. **Calibração (~10 s)** — LED **piscando vermelho**. O sistema mede o **ar limpo** (base de cada MQ) e a **temperatura ambiente**.
+2. **Calibração (10 a 30 s)** — LED **piscando vermelho**. O sistema mede o **ar limpo** (base de cada MQ) e a **temperatura ambiente**.
 3. **Sistema ativo.**
 
 Os alarmes funcionam **por comparação com a base**, e não com um número fixo. Isso torna o sistema independente do ambiente e da calibração de fábrica de cada sensor.
@@ -135,8 +135,8 @@ Os alarmes funcionam **por comparação com a base**, e não com um número fixo
 | Chama | o tempo todo | Considera "chama presente" por 1,5 s após a última detecção, porque a chama tremula |
 | Botão do fogão | o tempo todo | Cada aperto liga/desliga, com proteção contra trepidação |
 | Movimento (PIR) | o tempo todo | Conta há quanto tempo não há movimento com o fogão ligado |
-| MQ-2 e MQ-6 | a cada 2 s | Média de 20 leituras; compara com a base |
-| Temperatura | a cada 2 s | Descarta leituras impossíveis (< 5 °C ou > 60 °C) |
+| MQ-2 e MQ-6 | a cada 1 s | Média de 20 leituras; compara com a base (a base se ajusta a cada 2 s) |
+| Temperatura | a cada 1 s | Descarta leituras impossíveis (< 5 °C ou > 60 °C) |
 
 ### 3. Decisões que deixam o sistema mais confiável
 
@@ -176,6 +176,10 @@ Quando o cenário muda, o Monitor Serial mostra um bloco em destaque:
 ```
 
 Ao voltar ao normal, ele informa quanto tempo durou a situação. A cada 2 segundos também aparece uma linha de status, e eventos isolados aparecem com o prefixo `[evento]`.
+
+### Gravação do `daily-report.csv`
+
+A cada 1 s o firmware também imprime uma linha `CSV,...` (formato em [`docs/csv-contract.md`](../docs/csv-contract.md)). Com o Monitor Serial do PlatformIO aberto, o filtro [`monitor/filter_gasguard.py`](monitor/filter_gasguard.py) (ativado no `platformio.ini`) grava essas linhas no `daily-report.csv` da raiz, e o app web mostra tudo ao vivo. Nada muda no uso: é só abrir o Monitor. Não rode o simulador ao mesmo tempo.
 
 ---
 
@@ -287,10 +291,9 @@ Os limites dos MQ são **experimentais**, calibrados na maquete. Eles não corre
 
 ## Próximas etapas
 
-- [ ] **Registro em CSV** das leituras em tempo real.
-- [ ] **Back-end (API)** que lê os dados, avalia as regras e envia **e-mail/SMS** personalizado ao usuário.
-- [ ] **App em formato de celular** mostrando as métricas em tempo real.
-- [ ] **Simulador** de cenários para demonstração sem gás nem fogo.
+- [ ] **Registro em CSV** das leituras em tempo real (linha `CSV,...` no firmware + filtro do Monitor Serial).
+- [x] **App web** mobile-first com as métricas em tempo real, login e **e-mail** nos casos críticos (em [`web/`](../web/)).
+- [x] **Simulador** de cenários para demonstração sem gás nem fogo ([`mock-daily-report.js`](../mock-daily-report.js)).
 - [ ] Envio de telemetria por **Wi-Fi + MQTT**.
 - [ ] Firmware organizado em tarefas **FreeRTOS**.
 
@@ -315,9 +318,11 @@ O repositório completo (app web, simulador e documentação) está descrito no 
 
 ## Equipe
 
-| Nome | Função |
-|---|---|
-| _preencher_ | _preencher_ |
+- Bernardo Heuer
+- Lucas Calabria
+- Joao Pedro
+- Maria Julia Dantas
+- Maria Luiza Dantas
 
 ---
 

@@ -64,6 +64,8 @@ export function startAlertWatcher(send: AlertSend = sendAlertEmail): () => void 
       onReading: (reading) => {
         const from = previous;
         previous = reading.level;
+        // Cheap check first: only touch SQLite and env when the level enters CRITICAL.
+        if (!enteredCritical(from, reading.level)) return;
         const gmailUser = process.env.GMAIL_USER || undefined;
         void handleCriticalReading({
           previousLevel: from,
@@ -74,8 +76,8 @@ export function startAlertWatcher(send: AlertSend = sendAlertEmail): () => void 
           user: gmailUser,
           pass: process.env.GMAIL_APP_PASSWORD || undefined,
           from:
-            process.env.ALERT_FROM_EMAIL ??
-            gmailUser ??
+            process.env.ALERT_FROM_EMAIL ||
+            gmailUser ||
             "GasGuard <alertas@localhost>",
           send,
         }).catch((error) => {
