@@ -56,4 +56,5 @@ Código: [`hardware/src/main.cpp`](../hardware/src/main.cpp) (C++/Arduino, Platf
 ## Equipe e disciplina
 
 - Disciplina: Sistemas Embarcados, CESAR School, 2026.
+- Equipe: Bernardo Heuer, Lucas Calabria, Joao Pedro, Maria Julia Dantas, Maria Luiza Dantas.
 - O requisito oficial da disciplina inclui **Wi-Fi + MQTT**. Esta fase usa a Serial USB, e o MQTT é uma etapa futura que só troca a **entrada** dos dados (ver [roadmap](roadmap.md)).

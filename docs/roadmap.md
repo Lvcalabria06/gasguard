@@ -37,7 +37,7 @@ Contrato: [csv-contract.md → Lado do hardware](csv-contract.md#lado-do-hardwar
 - [x] Tela única mobile-first: topo, cartão de risco, métricas, gráfico e eventos com filtros.
 - [x] Modo claro e escuro e animação de pulso.
 - [x] Destaque rápido quando o estado de uma métrica muda (nível do gás, chama, fogão, movimento).
-- [ ] Teste no celular pela rede Wi-Fi.
+- [x] Teste no celular pela rede Wi-Fi.
 
 ## Etapa 5: Alertas por e-mail
 

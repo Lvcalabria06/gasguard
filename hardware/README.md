@@ -318,9 +318,11 @@ O repositório completo (app web, simulador e documentação) está descrito no 
 
 ## Equipe
 
-| Nome | Função |
-|---|---|
-| _preencher_ | _preencher_ |
+- Bernardo Heuer
+- Lucas Calabria
+- Joao Pedro
+- Maria Julia Dantas
+- Maria Luiza Dantas
 
 ---
 
