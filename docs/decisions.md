@@ -116,3 +116,8 @@ Login/cadastro usam Better Auth com `better-sqlite3` em `web/.data/auth.sqlite`.
 **Substitui** o trecho de D11 (“Sem banco, sem login…”) e a auth caseira JSON+HMAC da Etapa 5.
 **Por quê:** menos código nosso, DX igual a um arquivo local, foco na lógica de produto.
 **Alternativa descartada:** Postgres no Docker (processo extra); JSON caseiro (sessão/hash manuais); Better Auth sem proteger o app.
+
+## D22. Wi-Fi + MQTT fica para depois do check point
+
+Em 2026-11-16, os professores confirmaram que a comunicação por **Wi-Fi + MQTT** pode ficar para uma etapa posterior. Até lá, a placa envia as leituras pela **USB (Serial)** e o filtro do Monitor Serial grava o `daily-report.csv` ([D3](#d3-a-placa-grava-o-csv-por-meio-de-um-filtro-do-monitor-serial-do-platformio)).
+**Por quê:** o fluxo atual já atende ao check point de ponta a ponta; o MQTT só troca a **entrada** dos dados (um coletor grava o mesmo CSV), sem mudar o back-end nem o dashboard.
